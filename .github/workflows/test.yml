@@ -9,8 +9,8 @@ jobs:
     name: Sync engine and room server
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
@@ -19,23 +19,24 @@ jobs:
       - run: npm run lint:extension
 
   browser:
-    name: Browser tests (Chromium)
+    name: Browser tests (Chrome)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
       - run: npm ci
       - run: sudo apt-get update && sudo apt-get install -y ffmpeg
-      - name: Install Chromium
-        id: chromium
-        run: echo "path=$(npx --yes @puppeteer/browsers install chromium@latest --path "$HOME/.cache/browsers" | tail -1 | awk '{print $2}')" >> "$GITHUB_OUTPUT"
+      # Chrome for Testing, since plain Chromium builds can't play the H.264 test video.
+      - name: Install Chrome
+        id: chrome
+        run: echo "path=$(npx --yes @puppeteer/browsers install chrome@stable --path "$HOME/.cache/browsers" | tail -1 | awk '{print $2}')" >> "$GITHUB_OUTPUT"
       - run: npm run test:browser
         env:
-          CHROMIUM_PATH: ${{ steps.chromium.outputs.path }}
-      - uses: actions/upload-artifact@v4
+          CHROMIUM_PATH: ${{ steps.chrome.outputs.path }}
+      - uses: actions/upload-artifact@v5
         if: always()
         with:
           name: screenshots

@@ -79,7 +79,7 @@ npm run test:browser -- firefox youtube    # also Firefox, and real YouTube (nee
 npm run lint:extension                     # Mozilla's extension linter
 ```
 
-Browser tests need Chromium (`CHROMIUM_PATH`, default `/usr/bin/chromium`), ffmpeg to generate test media, and for the `firefox` option Firefox (`FIREFOX_PATH`). GitHub Actions runs `npm test`, the linter and the Chromium browser suites on every push.
+Browser tests need Chromium (`CHROMIUM_PATH`, default `/usr/bin/chromium`), ffmpeg to generate test media, and for the `firefox` option Firefox (`FIREFOX_PATH`). GitHub Actions runs `npm test`, the linter and the Chrome browser suites on every push.
 
 | Suite | Covers |
 |---|---|
