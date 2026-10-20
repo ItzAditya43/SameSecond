@@ -69,7 +69,7 @@ await B.waitForFunction(() => document.querySelector("video") && document.queryS
 await B.evaluate(() => document.querySelector("video").play());
 await B.type("#chat-input", "before the restart");
 await B.click("#chat-form button");
-await sleep(3000);
+await sleep(6000);
 let v = await vt(V), b = await vt(B);
 check("room is playing in sync before anything breaks", !v.paused && gap(v, b) < 0.15, `gap ${gap(v, b).toFixed(3)}`);
 

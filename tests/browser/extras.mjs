@@ -48,11 +48,20 @@ let a = await vt(A);
 check("HLS stream plays", !a.paused && a.t > 1, JSON.stringify(a));
 
 // B arrives with a saved name, so it joins without tapping anything.
-await B.evaluateOnNewDocument(() => { try { localStorage.setItem("syncroom.name", "Sam"); } catch (e) { /* ignore */ } });
+await B.evaluateOnNewDocument(() => {
+  try { localStorage.setItem("syncroom.name", "Sam"); } catch (e) { /* ignore */ }
+  // Behave like a phone in every browser: refuse to start playback until the page has been tapped.
+  const play = HTMLMediaElement.prototype.play;
+  HTMLMediaElement.prototype.play = function () {
+    if (!navigator.userActivation.hasBeenActive) return Promise.reject(new DOMException("Tap first", "NotAllowedError"));
+    return play.call(this);
+  };
+});
 await B.goto(room);
-await ready(B);
+await B.waitForFunction(() => { const v = document.querySelector("video"); return v && v.readyState >= 1; }, { timeout: 15000, polling: 200 });
 await sleep(4500);
-let b = await vt(B);
+const blocked = await B.$eval("video", (v) => ({ paused: v.paused }));
+let b = { paused: blocked.paused };
 const banner = await B.$eval("#unlock", (e) => !e.hidden);
 check("blocked autoplay shows the tap-to-start bar", b.paused && banner, `paused=${b.paused} bar=${banner}`);
 await B.tap("#unlock-btn");
