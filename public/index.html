@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Syncroom</title>
+<meta name="description" content="Watch together in sync. Everyone plays their own video, so there is no lag and no stream to pay for.">
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Syncroom">
+<meta property="og:title" content="Join my watch party on Syncroom">
+<meta property="og:description" content="Watch together on the same second. No lag, no time limits, nothing to pay.">
+<meta property="og:image" content="/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#0b7a75">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Figtree:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="/" aria-label="Syncroom home"><span class="brand-mark" aria-hidden="true"></span>Syncroom</a>
+  <div class="topbar-room" id="topbar-room" hidden>
+    <span class="room-title" id="room-title"></span>
+    <button class="btn small" id="copy-invite" type="button">Copy invite link</button>
+  </div>
+</header>
+
+<!-- Landing -->
+<main id="view-home" class="home" hidden>
+  <section class="hero">
+    <h1>Watch together, on the same second.</h1>
+    <p class="lede">Everyone plays the video on their own device and Syncroom keeps you in step. No laggy re-stream, no time limits, nothing to pay.</p>
+  </section>
+
+  <form class="card start" id="start-form" autocomplete="off">
+    <h2>Start a room</h2>
+    <label for="start-name">Your name</label>
+    <input id="start-name" name="name" maxlength="32" placeholder="e.g. Aditya" required>
+    <label for="start-url">Video link</label>
+    <input id="start-url" name="url" inputmode="url" placeholder="YouTube link, or a link to an .mp4 or .m3u8" required>
+    <p class="hint" id="start-hint">Works on phones and laptops.</p>
+    <button class="btn primary" type="submit">Start room</button>
+  </form>
+
+  <form class="card join" id="join-form" autocomplete="off">
+    <h2>Got an invite?</h2>
+    <label for="join-code">Invite link or room code</label>
+    <div class="row">
+      <input id="join-code" placeholder="Paste it here" required>
+      <button class="btn" type="submit">Join</button>
+    </div>
+  </form>
+
+  <section class="card ext">
+    <h2>Netflix, Crunchyroll and other sites</h2>
+    <p>Sites with protected video only play inside their own page, so they need the browser extension on a laptop or PC. Open the episode, click the Syncroom button and start a room there. Everyone uses their own account and plays at full quality.</p>
+    <p class="ext-status" id="ext-status">Extension not detected in this browser.</p>
+    <a class="btn" href="/extension.html">Get the extension</a>
+  </section>
+
+  <footer class="foot"><a href="/privacy.html">Privacy</a></footer>
+</main>
+
+<!-- Room -->
+<main id="view-room" class="room" hidden>
+  <section class="stage-col">
+    <div class="stage" id="stage">
+      <div class="stage-card" id="stage-message">
+        <p>Connecting…</p>
+      </div>
+    </div>
+    <div class="sync-line" id="sync-line" hidden>
+      <span class="sync-dot" id="sync-dot"></span>
+      <span id="sync-text">Connecting</span>
+    </div>
+    <div class="unlock" id="unlock" hidden>
+      <span id="unlock-text">Your browser blocked autoplay.</span>
+      <button class="btn primary small" id="unlock-btn" type="button">Tap to start watching</button>
+    </div>
+    <form class="change" id="change-form" hidden autocomplete="off">
+      <label for="change-url" class="visually-hidden">Play something else</label>
+      <input id="change-url" inputmode="url" placeholder="Play something else: paste a link">
+      <button class="btn small" type="submit">Play</button>
+    </form>
+  </section>
+
+  <aside class="side">
+    <div class="voice-bar" id="voice-bar">
+      <div class="voice-info">
+        <strong>Voice</strong>
+        <span id="voice-people">Nobody is talking yet</span>
+      </div>
+      <div class="voice-actions">
+        <button class="btn small" id="voice-mute" type="button" hidden>Mute</button>
+        <button class="btn small primary" id="voice-toggle" type="button">Join voice</button>
+      </div>
+    </div>
+    <div class="tabs" role="tablist">
+      <button class="tab" role="tab" id="tab-chat" aria-selected="true" aria-controls="panel-chat" type="button">Chat</button>
+      <button class="tab" role="tab" id="tab-people" aria-selected="false" aria-controls="panel-people" type="button">People <span class="count" id="people-count">0</span></button>
+    </div>
+    <div class="panel" id="panel-chat" role="tabpanel" aria-labelledby="tab-chat">
+      <div class="chat-log" id="chat-log" aria-live="polite"></div>
+      <form class="chat-form" id="chat-form" autocomplete="off">
+        <label for="chat-input" class="visually-hidden">Message</label>
+        <input id="chat-input" maxlength="500" placeholder="Say something">
+        <button class="btn small" type="submit">Send</button>
+      </form>
+    </div>
+    <div class="panel" id="panel-people" role="tabpanel" aria-labelledby="tab-people" hidden>
+      <ul class="people" id="people"></ul>
+      <div class="control-setting" id="control-setting" hidden>
+        <label for="control-select">Who can play, pause and seek</label>
+        <select id="control-select">
+          <option value="everyone">Everyone</option>
+          <option value="host">Only me</option>
+        </select>
+      </div>
+    </div>
+  </aside>
+</main>
+
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script src="/sync-core.js"></script>
+<script src="/app.js"></script>
+</body>
+</html>

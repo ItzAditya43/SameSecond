@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Privacy · Syncroom</title>
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Figtree:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap">
+<link rel="stylesheet" href="/style.css">
+<style>
+  .doc h2 { font-size: 1.2rem; margin-top: 8px; }
+  .doc p, .doc li { color: var(--muted); max-width: 65ch; }
+  .doc ul { margin: 0; padding-left: 1.2em; display: flex; flex-direction: column; gap: 6px; }
+  .doc strong { color: var(--fg); }
+</style>
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="/" aria-label="Syncroom home"><span class="brand-mark" aria-hidden="true"></span>Syncroom</a>
+</header>
+<main class="home doc">
+  <section class="hero">
+    <h1>Privacy</h1>
+    <p class="lede">Syncroom has no accounts, no ads and no analytics. It only handles what a watch party needs, and forgets it shortly after.</p>
+  </section>
+
+  <section class="card">
+    <h2>What the room server receives</h2>
+    <ul>
+      <li><strong>The name you type</strong>, shown to others in the room.</li>
+      <li><strong>Chat messages</strong> you send in the room.</li>
+      <li><strong>The address of the video</strong> the room is watching, and play, pause and position updates, so everyone's player can follow.</li>
+      <li><strong>A random ID</strong> stored in your browser, so the room recognises the host after a reconnect.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2>What it never receives</h2>
+    <ul>
+      <li>The video itself. Each person streams from the site on their own account.</li>
+      <li>Your passwords, cookies or anything else from the sites you watch.</li>
+      <li>Your browsing outside the tab you start or join a room in. The extension only runs in that one tab.</li>
+      <li>Voice audio. Voice goes directly between the people in the call. On networks that block direct calls it may pass through an encrypted relay that can't listen in.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2>How long it's kept</h2>
+    <p>A room's state and its last 50 chat messages are kept while people are in it, and deleted 24 hours after the last person leaves. Nothing is sold or shared.</p>
+  </section>
+
+  <section class="card">
+    <h2>Hosting</h2>
+    <p>Syncroom runs on Cloudflare Workers. Cloudflare processes connection data such as IP addresses to deliver the service and may keep short-lived request logs. See Cloudflare's privacy policy for details.</p>
+  </section>
+
+  <section class="card">
+    <h2>Questions</h2>
+    <p>Contact the person who runs this Syncroom site.</p>
+  </section>
+</main>
+</body>
+</html>

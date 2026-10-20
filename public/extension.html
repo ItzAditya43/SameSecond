@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Get the extension · Syncroom</title>
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Figtree:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap">
+<link rel="stylesheet" href="/style.css">
+<style>
+  .steps { margin: 0; padding-left: 1.3em; display: flex; flex-direction: column; gap: 8px; color: var(--muted); }
+  .steps strong { color: var(--fg); }
+  code { font-family: var(--mono); font-size: 0.85em; background: var(--sunken); padding: 1px 5px; border-radius: 4px; overflow-wrap: anywhere; }
+</style>
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="/" aria-label="Syncroom home"><span class="brand-mark" aria-hidden="true"></span>Syncroom</a>
+</header>
+<main class="home">
+  <section class="hero">
+    <h1>Get the Syncroom extension</h1>
+    <p class="lede">The extension syncs video on any site, including Netflix, Crunchyroll and other sites with protected video. Everyone needs it, signed in to their own account on the site.</p>
+  </section>
+
+  <section class="card">
+    <h2>Download</h2>
+    <p class="hint" id="dl-note">The extension is set up for this site, so rooms you start land here.</p>
+    <a class="btn primary" id="dl" href="/downloads/syncroom-extension.zip" download>Download syncroom-extension.zip</a>
+  </section>
+
+  <section class="card">
+    <h2>Chrome, Edge, Brave or Opera</h2>
+    <ol class="steps">
+      <li>Download <code>syncroom-extension.zip</code> above and unzip it.</li>
+      <li>Open <code>chrome://extensions</code> (or <code>edge://extensions</code>) and turn on <strong>Developer mode</strong>.</li>
+      <li>Click <strong>Load unpacked</strong> and choose the unzipped folder.</li>
+      <li>Pin Syncroom from the puzzle-piece menu so its button is always visible.</li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2>Firefox on a computer</h2>
+    <ol class="steps">
+      <li>Install Syncroom from addons.mozilla.org once it's listed there. Firefox only installs extensions that Mozilla has signed.</li>
+      <li>When Firefox asks, allow Syncroom to access websites. You can also do this from the Syncroom sidebar.</li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2>Firefox on Android</h2>
+    <ol class="steps">
+      <li>Install Firefox from the Play Store, then install Syncroom from its add-ons page once it's listed there.</li>
+      <li>Open the video's page, tap the menu, then <strong>Add-ons → Syncroom</strong>.</li>
+      <li>Some sites, including Netflix, don't play in phone browsers at all. On those, use your phone for chat and voice from the invite link instead.</li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2>iPhone and other Android browsers</h2>
+    <p class="hint">These can't run the extension. Open the invite link to watch YouTube and video-link rooms, or to chat and talk while you watch on another screen.</p>
+  </section>
+</main>
+<script>
+  // Hide the download button if this server hasn't published a build.
+  fetch("/downloads/syncroom-extension.zip", { method: "HEAD" }).then(function (r) {
+    var ok = r.ok && /zip|octet/.test(r.headers.get("content-type") || "");
+    if (!ok) {
+      document.getElementById("dl").hidden = true;
+      document.getElementById("dl-note").textContent = "No download is published on this site yet. Ask whoever runs it to deploy with npm run deploy.";
+    }
+  }).catch(function () {});
+</script>
+</body>
+</html>

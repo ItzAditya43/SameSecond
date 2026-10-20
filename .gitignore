@@ -1,0 +1,11 @@
+node_modules/
+.wrangler/
+dist/
+.dev.vars
+tests/browser/media/test.mp4
+tests/browser/shots/
+tests/browser/.ext-build*/
+public/downloads/
+.syncroom-url
+tests/browser/media/hls/
+tests/browser/.wrangler-state/

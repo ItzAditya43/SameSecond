@@ -1,0 +1,33 @@
+{
+  "manifest_version": 3,
+  "name": "Syncroom",
+  "version": "0.1.0",
+  "description": "Watch together in sync on Netflix, YouTube, Crunchyroll and more. Everyone plays their own video, so there's no lag.",
+  "permissions": ["storage", "tabs", "scripting", "webNavigation", "sidePanel"],
+  "host_permissions": ["<all_urls>"],
+  "content_security_policy": { "extension_pages": "script-src 'self'; object-src 'self'" },
+  "background": {
+    "service_worker": "background.js",
+    "scripts": ["config.js", "sync-core.js", "background.js"]
+  },
+  "action": {
+    "default_title": "Syncroom",
+    "default_icon": { "16": "icons/16.png", "32": "icons/32.png", "48": "icons/48.png" }
+  },
+  "side_panel": { "default_path": "panel.html" },
+  "sidebar_action": {
+    "default_panel": "panel.html",
+    "default_title": "Syncroom",
+    "default_icon": { "16": "icons/16.png", "32": "icons/32.png" },
+    "open_at_install": false
+  },
+  "icons": { "16": "icons/16.png", "32": "icons/32.png", "48": "icons/48.png", "128": "icons/128.png" },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "syncroom@syncroom.app",
+      "strict_min_version": "140.0",
+      "data_collection_permissions": { "required": ["browsingActivity", "websiteActivity", "personalCommunications"] }
+    },
+    "gecko_android": { "strict_min_version": "142.0" }
+  }
+}

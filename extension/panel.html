@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Syncroom</title>
+<link rel="stylesheet" href="panel.css">
+</head>
+<body>
+<header class="head">
+  <span class="brand"><span class="mark" aria-hidden="true"></span>Syncroom</span>
+  <span class="conn" id="conn" hidden></span>
+</header>
+
+<div class="error" id="error" role="alert" hidden>
+  <span id="error-text"></span>
+  <button class="link" id="error-dismiss" type="button">Dismiss</button>
+</div>
+
+<div class="notice" id="perm" hidden>
+  <p>Syncroom needs access to websites to find and sync the video.</p>
+  <button class="btn primary" id="perm-btn" type="button">Allow access</button>
+</div>
+
+<!-- Not in a room -->
+<main id="lobby" hidden>
+  <section class="block">
+    <label for="name">Your name</label>
+    <input id="name" maxlength="32" placeholder="So friends know it's you" autocomplete="off">
+  </section>
+
+  <section class="block">
+    <h2>Start a room</h2>
+    <p class="muted" id="tab-info">Open the episode or video you want to watch, then start the room here.</p>
+    <button class="btn primary" id="start" type="button">Start a room on this tab</button>
+  </section>
+
+  <section class="block">
+    <h2>Join a room</h2>
+    <form class="row" id="join-form" autocomplete="off">
+      <label for="code" class="sr">Invite link or code</label>
+      <input id="code" placeholder="Paste the invite link">
+      <button class="btn" type="submit">Join</button>
+    </form>
+  </section>
+
+  <details class="block settings">
+    <summary>Settings</summary>
+    <label for="server">Syncroom server</label>
+    <input id="server" placeholder="https://syncroom.example.workers.dev" autocomplete="off" inputmode="url">
+    <button class="btn small" id="save-server" type="button">Save</button>
+  </details>
+</main>
+
+<!-- In a room -->
+<main id="room" hidden>
+  <section class="block">
+    <p class="site" id="room-site"></p>
+    <h2 id="room-title"></h2>
+    <p class="sync"><span class="dot" id="sync-dot"></span><span id="sync-text"></span></p>
+  </section>
+
+  <section class="block">
+    <label for="invite">Invite link</label>
+    <div class="row">
+      <input id="invite" readonly>
+      <button class="btn" id="copy" type="button">Copy</button>
+    </div>
+  </section>
+
+  <section class="block actions">
+    <button class="btn" id="focus" type="button">Go to video tab</button>
+    <button class="btn" id="voice" type="button">Voice chat</button>
+    <button class="btn danger" id="leave" type="button">Leave room</button>
+  </section>
+
+  <section class="block">
+    <h2>People <span class="count" id="count"></span></h2>
+    <ul class="people" id="people"></ul>
+    <div id="control-box" hidden>
+      <label for="control">Who can play, pause and seek</label>
+      <select id="control">
+        <option value="everyone">Everyone</option>
+        <option value="host">Only me</option>
+      </select>
+    </div>
+  </section>
+
+  <section class="block chat">
+    <h2>Chat</h2>
+    <div class="log" id="log" aria-live="polite"></div>
+    <form class="row" id="chat-form" autocomplete="off">
+      <label for="chat" class="sr">Message</label>
+      <input id="chat" maxlength="500" placeholder="Say something">
+      <button class="btn" type="submit">Send</button>
+    </form>
+  </section>
+</main>
+
+<script src="config.js"></script>
+<script src="sync-core.js"></script>
+<script src="panel.js"></script>
+</body>
+</html>

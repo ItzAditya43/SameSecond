@@ -1,0 +1,24 @@
+{
+  "name": "syncroom",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Free watch parties: everyone plays their own video, only the timecode travels.",
+  "scripts": {
+    "shared": "node scripts/copy-shared.mjs",
+    "dev": "npm run shared && node scripts/pack-extension.mjs http://localhost:8787 --out public/downloads/syncroom-extension.zip && wrangler dev",
+    "deploy": "node scripts/deploy.mjs",
+    "pack:extension": "npm run shared && node scripts/pack-extension.mjs",
+    "test": "npm run shared && node scripts/smoke-test.mjs",
+    "test:browser": "npm run shared && node tests/browser/run.mjs",
+    "lint:extension": "npm run shared && npx --yes web-ext lint -s extension"
+  },
+  "devDependencies": {
+    "puppeteer-core": "^25.14.0",
+    "wrangler": "^4.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ItzAditya43/SyncRoom.git"
+  }
+}
