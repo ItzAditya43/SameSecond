@@ -57,9 +57,13 @@ const title = await waitFor(async () => { const t = await A.$eval("#room-title",
 check("room shows the video's title", !!title, title || "");
 
 // Start playback with a real click on the player.
-const box = await (await A.$(".stage iframe")).boundingBox();
-await A.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
-const aPlaying = await waitFor(async () => { const r = await ytTime(A); return r && !r.paused && r.t > 1 ? r : null; }, 20000);
+// YouTube's player can take a few seconds to become clickable, so retry the click.
+let aPlaying = null;
+for (let i = 0; i < 8 && !aPlaying; i++) {
+  const box = await (await A.$(".stage iframe")).boundingBox();
+  await A.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+  aPlaying = await waitFor(async () => { const r = await ytTime(A); return r && !r.paused && r.t > 1 ? r : null; }, 4000);
+}
 check("host's YouTube player plays", !!aPlaying, aPlaying ? `t=${aPlaying.t.toFixed(1)}` : "");
 
 // B joins in the web app.

@@ -12,7 +12,11 @@
     "test": "npm run shared && node scripts/smoke-test.mjs",
     "test:browser": "npm run shared && node tests/browser/run.mjs",
     "lint:extension": "npm run shared && node scripts/pack-extension.mjs --target firefox --dir dist/lint-firefox && npx --yes web-ext lint -s dist/lint-firefox",
-    "check:deploy": "npm run shared && wrangler deploy --dry-run --outdir dist/worker"
+    "check:deploy": "npm run shared && wrangler deploy --dry-run --outdir dist/worker",
+    "release": "npm run shared && node scripts/release.mjs",
+    "guide-shots": "node scripts/make-guide-shots.mjs",
+    "test:android": "npm run shared && node tests/mobile/android.mjs",
+    "android:firefox": "npm run shared && adb reverse tcp:8787 tcp:8787 && node scripts/pack-extension.mjs http://127.0.0.1:8787 --target firefox --dir dist/android-firefox && npx --yes web-ext run -t firefox-android -s dist/android-firefox --firefox-apk org.mozilla.firefox"
   },
   "devDependencies": {
     "puppeteer-core": "^25.14.0",

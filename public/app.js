@@ -141,6 +141,7 @@
     };
     $("view-room").hidden = false;
     $("topbar-room").hidden = false;
+    $("site-nav").hidden = true;
     $("room-title").textContent = "Room " + id;
     document.title = "Room " + id + " · Syncroom";
     R.voice = new VoiceMesh(send);
@@ -220,6 +221,14 @@
     return m ? m.name : "Someone";
   }
 
+  // Offer "play something else" only where this page can play the current video;
+  // in a Netflix-type room it would pull the room away from the extension users.
+  function canChangeVideo() {
+    if (!R.state || R.kind === "voice" || !canControl()) return false;
+    var k = SC.classifyUrl(R.state.url).kind;
+    return k === "youtube" || k === "file";
+  }
+
   function canControl() {
     return R.kind !== "voice" && (R.control === "everyone" || R.host || !R.hostOnline);
   }
@@ -231,6 +240,7 @@
         break;
       case "welcome":
         R.everConnected = true;
+        $("side").hidden = false;
         session.del("syncroom.create." + R.id);
         if (!R.clock.samples.length) R.clock.offset = msg.serverTime - Date.now();
         R.you = msg.you;
@@ -311,7 +321,7 @@
     var c = SC.classifyUrl(state.url);
     R.playerKey = SC.urlKey(state.url);
     $("sync-line").hidden = false;
-    $("change-form").hidden = !canControl() || R.kind === "voice";
+    $("change-form").hidden = !canChangeVideo();
     setTitle(R.title || (c.kind === "page" ? c.site : c.kind === "file" ? decodeURIComponent(c.url.split("/").pop()) : "YouTube"));
 
     if (R.kind === "voice") return showVoiceCard();
@@ -620,7 +630,7 @@
     });
     $("control-setting").hidden = !R.host;
     $("control-select").value = R.control;
-    $("change-form").hidden = !canControl() || R.kind === "voice" || !R.state;
+    $("change-form").hidden = !canChangeVideo();
     renderVoicePeople();
   }
 

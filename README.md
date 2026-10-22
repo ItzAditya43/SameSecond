@@ -2,6 +2,30 @@
 
 Free watch parties. Everyone plays the video on their own device and Syncroom keeps the players on the same second. Video never passes through Syncroom, so there's no re-stream lag, DRM sites like Netflix keep working, and there's nothing to pay for.
 
+<p>
+  <img src="public/guide/web-2-room-laptop.webp" alt="A Syncroom room on a laptop playing a YouTube video in sync with a friend" width="66%">
+  <img src="public/guide/web-3-room-phone.webp" alt="The same room on a phone, in sync, with chat" width="24%">
+</p>
+
+- **YouTube or a video link:** start a room on the website, send the invite link, and friends join from any phone or laptop. Nothing to install.
+- **Netflix, Crunchyroll and other sites:** everyone installs the browser extension on a laptop and uses their own account; the extension keeps the site's own player in sync.
+- **Chat and voice** in every room, and a short notice on the video when someone pauses, skips or sends a message.
+
+The deployed website has a picture guide at `/guide` and install steps at `/extension`. The same pictures are in [`public/guide/`](public/guide/).
+
+## Install the extension from GitHub
+
+1. Download `syncroom-chrome.zip` from the [latest release](https://github.com/ItzAditya43/SyncRoom/releases/latest) and unzip it somewhere you'll keep it.
+2. Open `chrome://extensions` (`edge://extensions` in Edge, `opera://extensions` in Opera) and turn on **Developer mode**.
+3. Click **Load unpacked** and choose the unzipped folder.
+4. Pin Syncroom from the puzzle-piece menu, open an episode, click the button and press **Start a room on this tab**.
+
+| Developer mode | Load unpacked | Installed |
+|---|---|---|
+| ![Developer mode switch](public/guide/chrome-1-developer-mode.webp) | ![Load unpacked button](public/guide/chrome-2-load-unpacked.webp) | ![Syncroom installed](public/guide/chrome-3-installed.webp) |
+
+Firefox only installs signed add-ons, so Firefox users install it from Firefox Add-ons once it's listed. The release packages are built for one deployed site; until the first release exists, build your own with `npm run deploy`.
+
 | Part | What it does | Runs on |
 |---|---|---|
 | `server/` | Room server. One small object per room relays play, pause, seek, chat and voice-call setup. Also serves the website and fills in invite link previews. | Cloudflare Workers + Durable Objects (free tier) |
@@ -9,6 +33,7 @@ Free watch parties. Everyone plays the video on their own device and Syncroom ke
 | `extension/` | Browser extension that syncs the video on any site (Netflix, Crunchyroll, YouTube…), with a side panel for people, chat and the invite link. | Chrome, Edge, Brave, Opera, Firefox, Firefox for Android |
 | `shared/sync-core.js` | Sync engine used by both the website and the extension. | |
 | `store/` | Store listing text, permission justifications, promo images. | |
+| `scripts/` | Deploy, release, packaging, load test and screenshot scripts. | |
 
 ## How sync works
 
@@ -66,7 +91,9 @@ npx wrangler secret put TURN_KEY_API_TOKEN
 2. `npx wrangler login`, then `npm run deploy`.
 3. Open the printed address on a laptop and a phone, start a YouTube room and join it from the other device.
 4. Install the downloaded extension, start a room on an episode of a site you use (Netflix, Crunchyroll), and have a friend join from the invite link. This is the one flow automated tests can't cover, because it needs real accounts.
-5. Submit `dist/` packages to the stores you want, using [`store/LISTING.md`](store/LISTING.md) and `https://<your-site>/privacy` as the privacy policy.
+5. `npm run release` publishes both packages as a GitHub release, which is where the website's download buttons point. For later releases, bump the version first with `npm version patch`.
+6. Submit `dist/` packages to the stores you want, using [`store/LISTING.md`](store/LISTING.md) and `https://<your-site>/privacy` as the privacy policy.
+7. Optionally set the repo's website link: `gh repo edit --homepage https://<your-site>`.
 
 ### How much the free tier covers
 
@@ -91,6 +118,17 @@ Listing text, permission justifications and images are in [`store/LISTING.md`](s
 - Firefox for Android runs the extension, for sites that play in a phone browser.
 - Netflix and similar sites don't play in phone browsers at all, so phone users join those rooms for chat and voice only.
 - iPhones can't run this extension (Safari extensions need a Mac and a paid Apple developer account).
+
+## Testing on your phone
+
+Turn on USB debugging on an Android phone (Settings → About phone → tap **Build number** 7 times, then Settings → Developer options → **USB debugging**), plug it in, unlock it and accept the prompt.
+
+```sh
+npm run test:android      # Chrome on the phone joins a laptop's room: sync, tap-to-start, pause, seek, chat, layout
+npm run android:firefox   # installs the Firefox package into Firefox on the phone, for trying it by hand
+```
+
+`test:android` saves screenshots taken on the phone to `tests/mobile/shots/`. For `android:firefox`, also turn on **Remote debugging via USB** in Firefox's settings on the phone, and keep `npm run dev` running.
 
 ## Tests
 
@@ -133,3 +171,4 @@ Check those by hand before relying on them.
 - `extension/content.js`: finds the largest video on the page and keeps it in sync; site-specific behaviour (YouTube adverts, Netflix seeking) is in `makeAdapter`.
 - `extension/background.js`: room connection, tab following, panel.
 - `server/index.js`: the `Room` Durable Object, the message protocol and link previews.
+- `scripts/make-guide-shots.mjs` (`npm run guide-shots`): retakes the website guide screenshots by running the real flows in Chrome.

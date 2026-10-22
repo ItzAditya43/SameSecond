@@ -56,6 +56,8 @@ for (const t of targets) {
 // Each browser gets only the manifest keys it understands, so neither shows warnings.
 function manifestFor(t, m) {
   m = structuredClone(m);
+  // One version number for the whole project: package.json's.
+  m.version = JSON.parse(readFileSync(join(root, "package.json"), "utf8")).version;
   if (t === "chrome") {
     delete m.sidebar_action;
     delete m.browser_specific_settings;

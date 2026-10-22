@@ -27,6 +27,11 @@
 
 <header class="topbar">
   <a class="brand" href="/" aria-label="Syncroom home"><span class="brand-mark" aria-hidden="true"></span>Syncroom</a>
+  <nav class="nav" id="site-nav" aria-label="Site">
+    <a href="/guide">How it works</a>
+    <a href="/extension">Extension</a>
+    <a href="https://github.com/ItzAditya43/SyncRoom" rel="noopener">GitHub</a>
+  </nav>
   <div class="topbar-room" id="topbar-room" hidden>
     <span class="room-title" id="room-title"></span>
     <button class="btn small" id="copy-invite" type="button">Copy invite link</button>
@@ -66,7 +71,7 @@
     <a class="btn" href="/extension">Get the extension</a>
   </section>
 
-  <footer class="foot"><a href="/privacy">Privacy</a></footer>
+  <footer class="foot"><a href="/guide">How it works</a> · <a href="/extension">Get the extension</a> · <a href="https://github.com/ItzAditya43/SyncRoom" rel="noopener">Source on GitHub</a> · <a href="/privacy">Privacy</a></footer>
 </main>
 
 <!-- Room -->
@@ -92,7 +97,7 @@
     </form>
   </section>
 
-  <aside class="side">
+  <aside class="side" id="side" hidden>
     <div class="voice-bar" id="voice-bar">
       <div class="voice-info">
         <strong>Voice</strong>
