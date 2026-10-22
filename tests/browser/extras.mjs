@@ -1,10 +1,10 @@
 // HLS streams, blocked autoplay, reloads, three people with voice, hostile
 // chat, and the static pages.
 import puppeteer from "puppeteer-core";
+import { APP, MEDIA_BASE, CHROME_ARGS, watchPage } from "./env.mjs";
 import { spawn } from "node:child_process";
 
-const APP = "http://127.0.0.1:8799";
-const HLS = "http://127.0.0.1:8800/hls/index.m3u8";
+const HLS = MEDIA_BASE + "/hls/index.m3u8";
 const CHROMIUM = process.env.CHROMIUM_PATH || "/usr/bin/chromium";
 const here = new URL(".", import.meta.url).pathname;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -23,15 +23,15 @@ await sleep(500);
 // No autoplay flag: like a phone, playback needs a tap first.
 const browser = await puppeteer.launch({
   executablePath: CHROMIUM,
-  headless: true,
-  args: ["--no-sandbox", "--autoplay-policy=document-user-activation-required", "--use-fake-ui-for-media-stream", "--use-fake-device-for-media-stream"]
+  headless: true, acceptInsecureCerts: true,
+  args: [...CHROME_ARGS, "--no-sandbox", "--autoplay-policy=document-user-activation-required", "--use-fake-ui-for-media-stream", "--use-fake-device-for-media-stream"]
 });
 const ctx = () => browser.createBrowserContext();
 const A = await (await ctx()).newPage();
 const B = await (await ctx()).newPage();
 const C = await (await ctx()).newPage();
 const errors = [];
-for (const [p, n] of [[A, "A"], [B, "B"], [C, "C"]]) p.on("pageerror", (e) => errors.push(`${n}: ${e.message}`));
+for (const [p, n] of [[A, "A"], [B, "B"], [C, "C"]]) watchPage(p, n, errors);
 await B.setViewport({ width: 390, height: 844, isMobile: true, hasTouch: true });
 
 // HLS room.
@@ -122,10 +122,10 @@ check("chat markup is shown as text, not run", !pwned && raw.includes("&lt;img")
 const dl = await fetch(APP + "/downloads/syncroom-extension.zip");
 const zipBytes = Buffer.from(await dl.arrayBuffer());
 check("extension download is served as a zip", dl.ok && /zip|octet/.test(dl.headers.get("content-type") || "") && zipBytes.readUInt32LE(0) === 0x04034b50, dl.headers.get("content-type"));
-await A.goto(APP + "/extension.html");
+await A.goto(APP + "/extension");
 await sleep(800);
 check("download button shows when a build is published", await A.$eval("#dl", (e) => !e.hidden));
-await A.goto(APP + "/privacy.html");
+await A.goto(APP + "/privacy");
 check("privacy page loads", /What the room server receives/.test(await A.content()));
 const bad = await A.goto(APP + "/r/doesnotexist1");
 await A.waitForFunction(() => document.querySelector(".stage-card h2, .stage-card input"), { timeout: 5000 });
@@ -133,7 +133,7 @@ await A.evaluate(() => localStorage.setItem("syncroom.name", "Aditya"));
 await A.reload();
 await A.waitForFunction(() => /isn't available/.test(document.body.textContent), { timeout: 8000 }).then(() => check("a dead invite link says the room isn't available", true), () => check("a dead invite link says the room isn't available", false));
 
-check("no script errors on any page", errors.length === 0, errors.join("; "));
+check("no script errors or blocked loads on any page", errors.length === 0, errors.join("; "));
 await browser.close();
 media.kill();
 console.log(failures ? `${failures} failed` : "all passed");

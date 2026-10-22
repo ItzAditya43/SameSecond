@@ -10,6 +10,9 @@ const MAX_MESSAGE = 16 * 1024;
 const CHAT_HISTORY = 50;
 const BUFFER_TIMEOUT = 15_000;
 const ROOM_TTL = 24 * 60 * 60 * 1000;
+const RATE_WINDOW = 10_000;
+const RATE_ALL = 120;
+const RATE_CHAT = 8;
 
 function json(data, status = 200) {
   return new Response(JSON.stringify(data), {
@@ -127,6 +130,28 @@ export class Room extends DurableObject {
     this.room = null;
     // Answer heartbeats without waking the room from hibernation.
     this.ctx.setWebSocketAutoResponse(new WebSocketRequestResponsePair('{"t":"hb"}', '{"t":"hb"}'));
+  }
+
+  // Simple per-connection limits, so one misbehaving client can't flood a room.
+  // Counters live in memory and reset if the room hibernates, which is fine.
+  allow(ws, type, now) {
+    if (!this.rates) this.rates = new WeakMap();
+    let r = this.rates.get(ws);
+    if (!r || now - r.since > RATE_WINDOW) {
+      r = { since: now, all: 0, chat: 0, warned: false };
+      this.rates.set(ws, r);
+    }
+    r.all++;
+    if (type === "chat") r.chat++;
+    if (r.all > RATE_ALL) return false;
+    if (type === "chat" && r.chat > RATE_CHAT) {
+      if (!r.warned) {
+        r.warned = true;
+        try { ws.send(JSON.stringify({ t: "error", code: "slow-down", message: "You're sending messages too fast. Wait a few seconds." })); } catch { /* closing */ }
+      }
+      return false;
+    }
+    return true;
   }
 
   async load() {
@@ -255,8 +280,9 @@ export class Room extends DurableObject {
     let msg;
     try { msg = JSON.parse(raw); } catch { return; }
     if (!msg || typeof msg.t !== "string") return;
-    const att = ws.deserializeAttachment();
     const now = Date.now();
+    if (!this.allow(ws, msg.t, now)) return;
+    const att = ws.deserializeAttachment();
 
     if (msg.t === "ping") {
       ws.send(JSON.stringify({ t: "pong", c: msg.c, s: now }));

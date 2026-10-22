@@ -1,10 +1,10 @@
 // Two people in the web app watching the same direct video link.
 // Usage: node web.mjs [chrome|firefox]
 import puppeteer from "puppeteer-core";
+import { APP, MEDIA_BASE, CHROME_ARGS, watchPage } from "./env.mjs";
 import { spawn } from "node:child_process";
 
-const APP = "http://127.0.0.1:8799";
-const MEDIA = "http://127.0.0.1:8800/test.mp4";
+const MEDIA = MEDIA_BASE + "/test.mp4";
 const OUT = new URL("./shots/", import.meta.url).pathname;
 const CHROMIUM = process.env.CHROMIUM_PATH || "/usr/bin/chromium";
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -20,22 +20,23 @@ await sleep(800);
 const which = process.argv[2] || "chrome";
 const FIREFOX = process.env.FIREFOX_PATH || "/usr/bin/firefox";
 const browser = which === "firefox"
-  ? await puppeteer.launch({ browser: "firefox", executablePath: FIREFOX, headless: true, extraPrefsFirefox: {
+  ? await puppeteer.launch({ browser: "firefox", executablePath: FIREFOX, headless: true, acceptInsecureCerts: true, extraPrefsFirefox: {
       "media.autoplay.default": 0, "media.autoplay.blocking_policy": 0,
       "media.navigator.streams.fake": true, "media.navigator.permission.disabled": true,
       // Both test browsers are on one machine, so let calls use local addresses.
       "media.peerconnection.ice.loopback": true, "media.peerconnection.ice.obfuscate_host_addresses": false } })
   : await puppeteer.launch({
       executablePath: CHROMIUM,
-      headless: true,
-      args: ["--autoplay-policy=no-user-gesture-required", "--no-sandbox", "--use-fake-ui-for-media-stream", "--use-fake-device-for-media-stream"]
+      headless: true, acceptInsecureCerts: true,
+      args: [...CHROME_ARGS, "--autoplay-policy=no-user-gesture-required", "--no-sandbox", "--use-fake-ui-for-media-stream", "--use-fake-device-for-media-stream"]
     });
 const SHOT = (name) => OUT + name.replace(".png", which === "firefox" ? "-firefox.png" : ".png");
 const ctxA = await browser.createBrowserContext();
 const ctxB = await browser.createBrowserContext();
 const A = await ctxA.newPage();
 const B = await ctxB.newPage();
-for (const [p, n] of [[A, "A"], [B, "B"]]) p.on("pageerror", (e) => console.log(`  [${n} page error] ${e.message}`));
+const errors = [];
+for (const [p, n] of [[A, "A"], [B, "B"]]) watchPage(p, n, errors);
 await A.setViewport({ width: 1280, height: 800 });
 await B.setViewport(which === "firefox" ? { width: 390, height: 844 } : { width: 390, height: 844, isMobile: true, hasTouch: true });
 
@@ -82,9 +83,9 @@ check("friend follows a seek", Math.abs(a.t - b.t) < 0.6 && b.t > 55, `${a.t.toF
 await B.evaluate(() => { document.querySelector("video").playbackRate = 0.5; });
 await sleep(1200);
 await B.evaluate(() => { document.querySelector("video").playbackRate = 1; });
-await sleep(3500);
+await sleep(6000);
 a = await vt(A); b = await vt(B);
-check("drift is corrected", gap(a, b) < 0.12, `gap ${gap(a, b).toFixed(3)} s`);
+check("drift is corrected within 6 s", gap(a, b) < 0.12, `gap ${gap(a, b).toFixed(3)} s`);
 let worst = 0;
 for (let i = 0; i < 10; i++) { a = await vt(A); b = await vt(B); worst = Math.max(worst, gap(a, b)); await sleep(300); }
 check("players stay within 0.12 s of each other", worst < 0.12, `worst ${worst.toFixed(3)} s over 3 s`);
@@ -140,6 +141,7 @@ if (which !== "firefox") {
   await B.screenshot({ path: SHOT("room-phone-dark.png") });
 }
 
+check("no script errors or blocked loads", errors.filter((e) => !/WebRTC: ICE failed/.test(e)).length === 0, errors.join("; "));
 await browser.close();
 media.kill();
 console.log(failures ? `${failures} failed` : "all passed");

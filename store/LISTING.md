@@ -1,6 +1,6 @@
 # Store listing
 
-Copy-paste material for the Chrome Web Store, Microsoft Edge Add-ons, Opera Add-ons and Firefox Add-ons (AMO). Upload `dist/syncroom-extension.zip` from `npm run deploy`, which points the extension at your live site.
+Copy-paste material for the Chrome Web Store, Microsoft Edge Add-ons, Opera Add-ons and Firefox Add-ons (AMO). Upload the packages `npm run deploy` writes, which point the extension at your live site: `dist/syncroom-chrome.zip` for Chrome, Edge and Opera, and `dist/syncroom-firefox.zip` for Firefox.
 
 ## Name
 
@@ -55,7 +55,7 @@ Collected and sent to the Syncroom server:
 - **Website content / browsing activity:** the address of the video page the room is watching, and play, pause and position updates.
 - **Personal communications:** chat messages and the display name the user types.
 
-Declarations: not sold, not used for unrelated purposes, not used for credit decisions. Privacy policy URL: `https://<your-site>/privacy.html`.
+Declarations: not sold, not used for unrelated purposes, not used for credit decisions. Privacy policy URL: `https://<your-site>/privacy`.
 
 Firefox: the manifest already declares `browsingActivity`, `websiteActivity` and `personalCommunications` under `data_collection_permissions`.
 
@@ -74,7 +74,8 @@ Regenerate the promo images with `node store/make-assets.mjs`.
 
 | Store | Cost |
 |---|---|
-| Chrome Web Store | One-time $5 registration |
+| Chrome Web Store | One-time $5 developer registration |
 | Microsoft Edge Add-ons | Free |
 | Firefox Add-ons (AMO) | Free |
-| Opera Add-ons | Free |
+| Opera Add-ons | No fee mentioned in Opera's publishing guidelines |
+| Safari (App Store) | $99 a year Apple developer account; not set up in this project |

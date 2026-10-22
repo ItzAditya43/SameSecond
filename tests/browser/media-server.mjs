@@ -1,8 +1,10 @@
 // Static file server with HTTP Range support, so videos can seek.
 import http from "node:http";
+import https from "node:https";
+import { readFileSync } from "node:fs";
 import { statSync, createReadStream } from "node:fs";
 const dir = new URL("./media/", import.meta.url).pathname;
-http.createServer((req, res) => {
+const handler = (req, res) => {
   const file = dir + decodeURIComponent(new URL(req.url, "http://x").pathname).replace(/^\/+/, "").replace(/\.\./g, "");
   let st;
   try { st = statSync(file); } catch { res.writeHead(404); return res.end(); }
@@ -18,4 +20,12 @@ http.createServer((req, res) => {
     res.writeHead(200, { "content-type": type, "accept-ranges": "bytes", "content-length": st.size });
     createReadStream(file).pipe(res);
   }
-}).listen(8800, "127.0.0.1");
+};
+// MEDIA_TLS=<dir> serves HTTPS with <dir>/cert.pem and <dir>/key.pem, for the HTTPS test pass.
+const tls = process.env.MEDIA_TLS;
+const server = tls ? https.createServer({ cert: readFileSync(tls + "/cert.pem"), key: readFileSync(tls + "/key.pem") }, handler) : http.createServer(handler);
+server.listen(8800, "127.0.0.1");
+
+// Exit when the test that started this server goes away, so no stray server keeps the port.
+const parent = process.ppid;
+setInterval(() => { try { process.kill(parent, 0); } catch { process.exit(0); } }, 1000).unref();

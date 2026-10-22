@@ -2,7 +2,8 @@
 // Needs Chromium and ffmpeg (to make the test video). Options:
 //   firefox  also run the web app and invite handoff in Firefox
 //   youtube  also run the real-YouTube suite (needs internet)
-// Usage: npm run test:browser -- firefox youtube
+//   https    repeat the main suites over HTTPS, like the live site (needs openssl)
+// Usage: npm run test:browser -- firefox youtube https
 import { spawn, spawnSync } from "node:child_process";
 import { existsSync, mkdirSync } from "node:fs";
 
@@ -26,7 +27,7 @@ if (!existsSync(here + "media/hls/index.m3u8")) {
   ffmpeg(["-i", here + "media/test.mp4", "-c", "copy", "-hls_time", "4", "-hls_playlist_type", "vod",
     "-hls_segment_filename", here + "media/hls/seg%03d.ts", here + "media/hls/index.m3u8"]);
 }
-spawnSync("node", [root + "scripts/pack-extension.mjs", "http://localhost:8787", "--out", "public/downloads/syncroom-extension.zip"], { stdio: "inherit" });
+spawnSync("node", [root + "scripts/pack-extension.mjs", "http://localhost:8787", "--target", "chrome", "--out", "public/downloads/syncroom-extension.zip"], { stdio: "inherit" });
 
 const dev = spawn("npx", ["wrangler", "dev", "--port", "8799", "--ip", "127.0.0.1", "--log-level", "warn"], { cwd: root, stdio: "ignore", detached: true });
 for (let i = 0; ; i++) {
@@ -35,16 +36,39 @@ for (let i = 0; ; i++) {
   await new Promise((r) => setTimeout(r, 500));
 }
 
-const runs = [["web.mjs", "chrome"], ["extras.mjs"], ["ext.mjs"], ["bridge.mjs", "chrome"], ["resilience.mjs"]];
+const runs = [["web.mjs", "chrome"], ["extras.mjs"], ["ext.mjs", "chrome"], ["bridge.mjs", "chrome"], ["resilience.mjs"]];
 if (opts.includes("firefox")) runs.push(["web.mjs", "firefox"], ["bridge.mjs", "firefox"]);
 if (opts.includes("youtube")) runs.push(["youtube.mjs"]);
 const failed = [];
-for (const [file, ...args] of runs) {
-  const label = [file, ...args].join(" ");
+function suite(file, args, env = {}, tag = "") {
+  const label = [file, ...args].join(" ") + tag;
   console.log(`\n${label}`);
-  const r = spawnSync("node", [here + file, ...args], { stdio: "inherit" });
+  const r = spawnSync("node", [here + file, ...args], { stdio: "inherit", env: { ...process.env, ...env } });
   if (r.status !== 0) failed.push(label);
 }
+for (const [file, ...args] of runs) suite(file, args);
 try { process.kill(-dev.pid); } catch { /* already stopped */ }
-console.log(failed.length ? `\nfailed: ${failed.join(", ")}` : `\nall ${runs.length} browser suites passed`);
+
+// The live site runs on https:// and wss://, so repeat the main suites over HTTPS.
+if (opts.includes("https")) {
+  const tls = here + ".tls";
+  mkdirSync(tls, { recursive: true });
+  if (!existsSync(tls + "/cert.pem")) {
+    const r = spawnSync("openssl", ["req", "-x509", "-newkey", "rsa:2048", "-nodes", "-keyout", tls + "/key.pem", "-out", tls + "/cert.pem",
+      "-days", "30", "-subj", "/CN=127.0.0.1", "-addext", "subjectAltName=IP:127.0.0.1"], { stdio: "ignore" });
+    if (r.status !== 0) { console.error("openssl is needed for the HTTPS pass"); process.exit(1); }
+  }
+  const secure = spawn("npx", ["wrangler", "dev", "--port", "8797", "--ip", "127.0.0.1", "--local-protocol", "https",
+    "--https-key-path", tls + "/key.pem", "--https-cert-path", tls + "/cert.pem", "--log-level", "warn"], { cwd: root, stdio: "ignore", detached: true });
+  process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+  for (let i = 0; ; i++) {
+    try { if ((await fetch("https://127.0.0.1:8797/api/health")).ok) break; } catch { /* starting */ }
+    if (i > 80) { process.kill(-secure.pid); throw new Error("HTTPS wrangler dev did not start"); }
+    await new Promise((r) => setTimeout(r, 500));
+  }
+  const env = { SYNCROOM_APP: "https://127.0.0.1:8797", SYNCROOM_MEDIA: "https://127.0.0.1:8800", MEDIA_TLS: tls, NODE_TLS_REJECT_UNAUTHORIZED: "0" };
+  for (const [file, ...args] of [["web.mjs", "chrome"], ["extras.mjs"], ["ext.mjs", "chrome"], ["bridge.mjs", "chrome"]]) suite(file, args, env, " (https)");
+  try { process.kill(-secure.pid); } catch { /* already stopped */ }
+}
+console.log(failed.length ? `\nfailed: ${failed.join(", ")}` : "\nall browser suites passed");
 process.exit(failed.length ? 1 : 0);

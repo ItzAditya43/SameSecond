@@ -1,8 +1,9 @@
 // The server restarting mid-room, and the browser stopping the extension's
 // background worker. Runs its own server on port 8798.
 import puppeteer from "puppeteer-core";
+import { buildExtension } from "./env.mjs";
 import { spawn } from "node:child_process";
-import { cpSync, rmSync, readFileSync, writeFileSync } from "node:fs";
+import { rmSync } from "node:fs";
 
 const APP = "http://127.0.0.1:8798";
 const MEDIA = "http://127.0.0.1:8800/test.mp4";
@@ -34,9 +35,7 @@ function stopServer() {
 }
 
 rmSync(STATE, { recursive: true, force: true });
-rmSync(EXT, { recursive: true, force: true });
-cpSync(root + "extension", EXT, { recursive: true });
-writeFileSync(EXT + "/config.js", readFileSync(EXT + "/config.js", "utf8").replace(/SYNCROOM_DEFAULT_SERVER = ".*?"/, `SYNCROOM_DEFAULT_SERVER = "${APP}"`));
+buildExtension("chrome", APP, EXT.replace(new URL("../..", import.meta.url).pathname, ""));
 const media = spawn("node", [here + "media-server.mjs"], { stdio: "ignore" });
 await startServer();
 

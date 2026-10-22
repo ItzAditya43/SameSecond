@@ -92,7 +92,8 @@
         if (isNetflix) netflix("seek", { ms: Math.round(t * 1000) });
         else v.currentTime = t;
       },
-      setRate: function (r) { v.playbackRate = r; }
+      setRate: function (r) { v.playbackRate = r; },
+      getRate: function () { return v.playbackRate; }
     };
     var handlers = {
       play: function () { if (controller) controller.onLocalEvent("play"); },
@@ -240,7 +241,7 @@
       var s = controller.status();
       post({ type: "send", msg: { t: "status", ready: s.ready, playing: s.playing, position: s.position, buffering: s.buffering } });
     }
-  }, 5000));
+  }, 10000));
 
   connect();
 })();

@@ -9,3 +9,4 @@ public/downloads/
 .syncroom-url
 tests/browser/media/hls/
 tests/browser/.wrangler-state/
+tests/browser/.tls/

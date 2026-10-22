@@ -1,12 +1,14 @@
-// The extension on a video tab, synced with a web-app user.
+// The extension on a video tab, synced with a web-app user. Chrome only:
+// Firefox's automation protocol won't open extension pages, so the Firefox
+// build is covered by bridge.mjs instead.
 import puppeteer from "puppeteer-core";
+import { APP, MEDIA_BASE, CHROME_ARGS, buildExtension } from "./env.mjs";
 import { spawn, execSync } from "node:child_process";
-import { cpSync, rmSync, readFileSync, writeFileSync } from "node:fs";
+import { rmSync } from "node:fs";
 
-const APP = "http://127.0.0.1:8799";
-const MEDIA = "http://127.0.0.1:8800/test.mp4";
+const MEDIA = MEDIA_BASE + "/test.mp4";
 const here = new URL(".", import.meta.url).pathname;
-const EXT = here + ".ext-build";
+const EXT = here + ".ext-build-chrome";
 const CHROMIUM = process.env.CHROMIUM_PATH || "/usr/bin/chromium";
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 let failures = 0;
@@ -15,26 +17,37 @@ function check(name, ok, detail = "") {
   if (!ok) failures++;
 }
 
-rmSync(EXT, { recursive: true, force: true });
-cpSync(new URL("../../extension", import.meta.url).pathname, EXT, { recursive: true });
-writeFileSync(EXT + "/config.js", readFileSync(EXT + "/config.js", "utf8").replace("http://localhost:8787", APP));
+buildExtension("chrome", APP, EXT.replace(new URL("../..", import.meta.url).pathname, ""));
 
 const media = spawn("node", [here + "media-server.mjs"], { stdio: "ignore" });
 await sleep(500);
 
-const browser = await puppeteer.launch({
-  executablePath: CHROMIUM,
-  headless: true,
-  pipe: true,
-  enableExtensions: [EXT],
-  args: ["--autoplay-policy=no-user-gesture-required", "--no-sandbox"]
-});
-
-const swTarget = await browser.waitForTarget((t) => t.type() === "service_worker" && t.url().startsWith("chrome-extension://"), { timeout: 10000 });
-const extId = new URL(swTarget.url()).host;
-check("extension loads", !!extId, extId);
-const sw = await swTarget.worker();
-sw.on("console", (m) => { if (m.type() === "error") console.log("  [bg]", m.text()); });
+let browser, panelUrl;
+{
+  browser = await puppeteer.launch({
+    executablePath: CHROMIUM,
+    headless: true, acceptInsecureCerts: true,
+    pipe: true,
+    enableExtensions: [EXT],
+    args: [...CHROME_ARGS, "--autoplay-policy=no-user-gesture-required", "--no-sandbox"]
+  });
+  const swTarget = await browser.waitForTarget((t) => t.type() === "service_worker" && t.url().startsWith("chrome-extension://"), { timeout: 10000 });
+  const extId = new URL(swTarget.url()).host;
+  check("extension loads", !!extId, extId);
+  const sw = await swTarget.worker();
+  sw.on("console", (m) => { if (m.type() === "error") console.log("  [bg]", m.text()); });
+  panelUrl = `chrome-extension://${extId}/panel.html`;
+  // What chrome://extensions (and a store reviewer) would flag about the package.
+  const X = await browser.newPage();
+  await X.goto("chrome://extensions");
+  const info = await X.evaluate((id) => new Promise((resolve) => chrome.developerPrivate.getExtensionsInfo({ includeDisabled: true }, (all) => {
+    const me = all.find((e) => e.id === id) || {};
+    resolve({ warnings: me.installWarnings || [], manifestErrors: (me.manifestErrors || []).map((e) => e.message) });
+  })), extId);
+  check("Chrome reports no manifest warnings or errors", info.warnings.length === 0 && info.manifestErrors.length === 0, JSON.stringify(info));
+  await X.close();
+}
+await sleep(1000);
 
 // Video tab.
 const V = await browser.newPage();
@@ -46,7 +59,7 @@ await sleep(500);
 
 // Panel, opened as a tab for the test.
 const P = await browser.newPage();
-await P.goto(`chrome-extension://${extId}/panel.html`);
+await P.goto(panelUrl);
 await sleep(500);
 const lobbyShown = await P.$eval("#lobby", (e) => !e.hidden);
 check("panel shows the lobby", lobbyShown);
@@ -89,8 +102,8 @@ v = await vt(V); b = await vt(B);
 check("extension tab follows a seek", Math.abs(v.t - b.t) < 0.6 && v.t > 78, `${v.t.toFixed(2)} vs ${b.t.toFixed(2)}`);
 
 // A real click-like pause in the extension tab is shared.
-const cdp = await V.createCDPSession();
-await cdp.send("Runtime.evaluate", { expression: "document.querySelector('video').pause()", userGesture: true });
+// (The test tool's script calls count as a user gesture.)
+await V.evaluate(() => document.querySelector("video").pause());
 await sleep(1500);
 b = await vt(B);
 check("user pause in extension tab reaches friend", b.paused, JSON.stringify(b));
@@ -102,9 +115,9 @@ check("on-video notice appears", /Sam/.test(toast), toast.slice(0, 80));
 
 // Resume from friend, then the page pauses itself (no user gesture): not shared.
 await B.evaluate(() => document.querySelector("video").play());
-await sleep(6000); // let the earlier gesture's activation expire
-await cdp.send("Runtime.evaluate", { expression: "document.querySelector('video').pause()", userGesture: false });
-await sleep(2000);
+// A timer that fires after the gesture has expired (5 s) acts like the site pausing itself.
+await V.evaluate(() => { setTimeout(() => document.querySelector("video").pause(), 6500); });
+await sleep(8500);
 v = await vt(V); b = await vt(B);
 check("site-driven pause is not shared", !b.paused, JSON.stringify(b));
 check("extension tab is pulled back to playing", !v.paused, JSON.stringify(v));

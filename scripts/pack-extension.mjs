@@ -1,21 +1,24 @@
-// Zips the extension with a server address baked in as its default.
-// Usage: node scripts/pack-extension.mjs <server-url> [--out <file.zip>]
-// Default output: dist/syncroom-extension.zip
-import { readFileSync, readdirSync, statSync, mkdirSync, writeFileSync } from "node:fs";
+// Builds the extension for each browser, with a server address baked in.
+// Usage: node scripts/pack-extension.mjs [server-url] [--target chrome|firefox|all]
+//                                        [--out file.zip] [--dir folder]
+// Default: both targets, written to dist/syncroom-chrome.zip and dist/syncroom-firefox.zip.
+// Chrome's build also covers Edge, Brave and Opera.
+import { readFileSync, readdirSync, statSync, mkdirSync, writeFileSync, rmSync } from "node:fs";
 import { dirname, join, relative, sep } from "node:path";
 import { deflateRawSync } from "node:zlib";
 import { fileURLToPath } from "node:url";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 const args = process.argv.slice(2);
-const outFlag = args.indexOf("--out");
-const out = outFlag >= 0 ? join(root, args[outFlag + 1]) : join(root, "dist", "syncroom-extension.zip");
-const serverUrl = args.find((a, i) => !a.startsWith("--") && (outFlag < 0 || i !== outFlag + 1));
+const flag = (name) => { const i = args.indexOf(name); return i >= 0 ? args[i + 1] : null; };
+const flagValues = new Set(["--out", "--dir", "--target"].map(flag).filter(Boolean));
+const serverUrl = args.find((a) => !a.startsWith("--") && !flagValues.has(a));
+const target = flag("--target") || "all";
+const targets = target === "all" ? ["chrome", "firefox"] : [target];
 
-if (serverUrl && !/^https?:\/\/[^\s"]+$/.test(serverUrl)) {
-  console.error(`Not a server address: ${serverUrl}`);
-  process.exit(1);
-}
+if (serverUrl && !/^https?:\/\/[^\s"]+$/.test(serverUrl)) fail(`Not a server address: ${serverUrl}`);
+if (!targets.every((t) => t === "chrome" || t === "firefox")) fail(`Unknown target: ${target}`);
+if ((flag("--out") || flag("--dir")) && targets.length > 1) fail("--out and --dir need a single --target");
 
 const extDir = join(root, "extension");
 const files = [];
@@ -27,17 +30,48 @@ const files = [];
   }
 })(extDir);
 
-const entries = files.map((full) => {
-  const name = relative(extDir, full).split(sep).join("/");
-  let data = readFileSync(full);
-  if (name === "config.js" && serverUrl) {
-    data = Buffer.from(data.toString("utf8").replace(/SYNCROOM_DEFAULT_SERVER = ".*?"/, `SYNCROOM_DEFAULT_SERVER = "${serverUrl.replace(/\/+$/, "")}"`));
+for (const t of targets) {
+  const entries = files.map((full) => {
+    const name = relative(extDir, full).split(sep).join("/");
+    let data = readFileSync(name === "sync-core.js" ? join(root, "shared", "sync-core.js") : full);
+    if (name === "config.js" && serverUrl) {
+      data = Buffer.from(data.toString("utf8").replace(/SYNCROOM_DEFAULT_SERVER = ".*?"/, `SYNCROOM_DEFAULT_SERVER = "${serverUrl.replace(/\/+$/, "")}"`));
+    }
+    if (name === "manifest.json") data = Buffer.from(JSON.stringify(manifestFor(t, JSON.parse(data.toString("utf8"))), null, 2) + "\n");
+    return { name, data };
+  });
+  const dir = flag("--dir");
+  if (dir) {
+    const base = join(root, dir);
+    rmSync(base, { recursive: true, force: true });
+    for (const e of entries) { mkdirSync(dirname(join(base, e.name)), { recursive: true }); writeFileSync(join(base, e.name), e.data); }
+    console.log(`${relative(root, base) || base}/  (${t}, ${entries.length} files${serverUrl ? `, server ${serverUrl}` : ""})`);
+  } else {
+    const out = flag("--out") ? join(root, flag("--out")) : join(root, "dist", `syncroom-${t}.zip`);
+    writeZip(out, entries);
+    console.log(`${relative(root, out)}  (${t}, ${entries.length} files${serverUrl ? `, server ${serverUrl}` : ""})`);
   }
-  return { name, data };
-});
+}
 
-writeZip(out, entries);
-console.log(`${relative(root, out)}  (${entries.length} files${serverUrl ? `, server ${serverUrl}` : ""})`);
+// Each browser gets only the manifest keys it understands, so neither shows warnings.
+function manifestFor(t, m) {
+  m = structuredClone(m);
+  if (t === "chrome") {
+    delete m.sidebar_action;
+    delete m.browser_specific_settings;
+    m.background = { service_worker: m.background.service_worker };
+  } else {
+    delete m.side_panel;
+    m.permissions = m.permissions.filter((p) => p !== "sidePanel");
+    m.background = { scripts: m.background.scripts };
+  }
+  return m;
+}
+
+function fail(msg) {
+  console.error(msg);
+  process.exit(1);
+}
 
 // Minimal zip writer (deflate, no external tools needed).
 function writeZip(path, items) {

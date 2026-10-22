@@ -17,9 +17,13 @@ jobs:
       - run: npm ci
       - run: npm test
       - run: npm run lint:extension
+      - name: Deploy dry run (bundles and validates without uploading)
+        run: npm run check:deploy
+      - name: Load test
+        run: node scripts/load-test.mjs
 
   browser:
-    name: Browser tests (Chrome)
+    name: Browser tests (Chrome, Firefox, HTTPS)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -33,8 +37,12 @@ jobs:
       - name: Install Chrome
         id: chrome
         run: echo "path=$(npx --yes @puppeteer/browsers install chrome@stable --path "$HOME/.cache/browsers" | tail -1 | awk '{print $2}')" >> "$GITHUB_OUTPUT"
-      - run: npm run test:browser
+      - name: Install Firefox
+        id: firefox
+        run: echo "path=$(npx --yes @puppeteer/browsers install firefox@stable --path "$HOME/.cache/browsers" | tail -1 | awk '{print $2}')" >> "$GITHUB_OUTPUT"
+      - run: npm run test:browser -- firefox https
         env:
+          FIREFOX_PATH: ${{ steps.firefox.outputs.path }}
           CHROMIUM_PATH: ${{ steps.chrome.outputs.path }}
       - uses: actions/upload-artifact@v5
         if: always()

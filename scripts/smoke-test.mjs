@@ -91,11 +91,23 @@ await test("follower speeds up slightly for small drift instead of jumping", () 
   player.t = 99.92;
   c.ignoreUntil = 0;
   c.reconcile(false);
-  assert.equal(player.rate, 1.02, "0.08 s behind plays 2% faster");
+  assert.equal(player.rate, 1.04, "0.08 s behind plays 4% faster");
   player.t = 100;
   c.ignoreUntil = 0;
   c.reconcile(false);
   assert.equal(player.rate, 1);
+});
+
+await test("speed correction is reapplied if something else changes the speed", () => {
+  const player = fakePlayer({ t: 99.6, paused: false });
+  player.getRate = () => player.rate;
+  const c = new SC.SyncController({ player, send: () => {}, now: () => 0 });
+  c.applyRemote({ playing: true, position: 100, updatedAt: 0 });
+  assert.equal(player.rate, 1.1);
+  player.rate = 1; // the site resets the speed
+  c.ignoreUntil = 0;
+  c.reconcile(false);
+  assert.equal(player.rate, 1.1);
 });
 
 await test("follower waits instead of seeking while its video is loading", () => {
@@ -449,6 +461,18 @@ await test("malformed, oversized and unknown messages are ignored", async () => 
   assert.equal(c.inbox.filter(is("state")).length, 0, "invalid state accepted");
   c.send({ t: "ping", c: 1 });
   await c.next(is("pong"));
+  c.close();
+});
+
+await test("chat floods are cut off with a notice", async () => {
+  const id = "flood" + Math.random().toString(36).slice(2, 8);
+  const c = new Client(id, { t: "hello", name: "F", clientKey: "kfl", kind: "web", create: { url: "https://example.com/a.mp4" } });
+  await c.next(is("welcome"));
+  for (let i = 0; i < 20; i++) c.send({ t: "chat", text: "spam " + i });
+  await c.next(is("error", (m) => m.code === "slow-down"));
+  await sleep(500);
+  const delivered = c.inbox.filter(is("chat")).length;
+  assert.ok(delivered <= 8, `${delivered} chats got through`);
   c.close();
 });
 

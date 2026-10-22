@@ -263,6 +263,7 @@
         break;
       case "error":
         if (msg.code === "no-room") showEnded(msg.message);
+        else if (msg.message) toast(msg.message);
         break;
     }
   }
@@ -351,7 +352,7 @@
         }
       }));
     } else {
-      actions.appendChild(el("a", { class: "btn primary", href: "/extension.html", text: "Get the extension" }));
+      actions.appendChild(el("a", { class: "btn primary", href: "/extension", text: "Get the extension" }));
     }
     stageCard([
       el("span", { class: "site", text: site }),
@@ -405,6 +406,7 @@
       pause: function () { player.pauseVideo(); },
       seek: function (t) { player.seekTo(t, true); lastTime = t; lastAt = Date.now(); },
       setRate: function (r) { player.setPlaybackRate(r); },
+      getRate: function () { return player.getPlaybackRate ? player.getPlaybackRate() : 1; },
       title: function () { try { return player.getVideoData().title; } catch (e) { return ""; } },
       destroy: function () { destroyed = true; clearInterval(poll); try { player && player.destroy(); } catch (e) { /* gone */ } }
     };
@@ -478,6 +480,7 @@
       pause: function () { video.pause(); },
       seek: function (t) { video.currentTime = t; },
       setRate: function (r) { video.playbackRate = r; },
+      getRate: function () { return video.playbackRate; },
       destroy: function () { if (hls) hls.destroy(); video.removeAttribute("src"); video.load(); }
     };
     video.addEventListener("loadedmetadata", function () { if (a.onReady) a.onReady(); }, { once: true });
@@ -525,8 +528,8 @@
         var s = R.controller.status();
         send({ t: "status", ready: s.ready, playing: s.playing, position: s.position, buffering: s.buffering });
       }
-    }, 5000));
-    R.timers.push(setInterval(ping, 30000));
+    }, 10000));
+    R.timers.push(setInterval(ping, 60000));
     R.timers.push(setInterval(function () { send({ t: "hb" }); }, 25000));
   }
 

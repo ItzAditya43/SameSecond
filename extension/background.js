@@ -144,7 +144,7 @@ function startTimers() {
   if (S.timers.length) return;
   // Regular traffic also keeps the browser from stopping this worker mid-room.
   S.timers.push(setInterval(() => send({ t: "hb" }), 20000));
-  S.timers.push(setInterval(ping, 30000));
+  S.timers.push(setInterval(ping, 60000));
 }
 
 function stopTimers() {
@@ -210,6 +210,10 @@ function handle(msg) {
       pushPanels({ chatOnly: true });
       break;
     case "error":
+      if (msg.code === "slow-down") {
+        toActive({ type: "toast", text: msg.message });
+        break;
+      }
       if (msg.code === "no-room") {
         S.error = msg.message || "This room has ended.";
         leaveRoom(true);

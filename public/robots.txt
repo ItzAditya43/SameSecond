@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+# Rooms are private watch parties; keep invite links out of search results.
+Disallow: /r/
+Disallow: /api/

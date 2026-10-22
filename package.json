@@ -6,12 +6,13 @@
   "description": "Free watch parties: everyone plays their own video, only the timecode travels.",
   "scripts": {
     "shared": "node scripts/copy-shared.mjs",
-    "dev": "npm run shared && node scripts/pack-extension.mjs http://localhost:8787 --out public/downloads/syncroom-extension.zip && wrangler dev",
+    "dev": "npm run shared && node scripts/pack-extension.mjs http://localhost:8787 --target chrome --out public/downloads/syncroom-extension.zip && wrangler dev",
     "deploy": "node scripts/deploy.mjs",
     "pack:extension": "npm run shared && node scripts/pack-extension.mjs",
     "test": "npm run shared && node scripts/smoke-test.mjs",
     "test:browser": "npm run shared && node tests/browser/run.mjs",
-    "lint:extension": "npm run shared && npx --yes web-ext lint -s extension"
+    "lint:extension": "npm run shared && node scripts/pack-extension.mjs --target firefox --dir dist/lint-firefox && npx --yes web-ext lint -s dist/lint-firefox",
+    "check:deploy": "npm run shared && wrangler deploy --dry-run --outdir dist/worker"
   },
   "devDependencies": {
     "puppeteer-core": "^25.14.0",

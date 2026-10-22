@@ -1,12 +1,12 @@
 // Invite link -> "Open in the extension" -> synced tab, for a site the web
 // app can't play. Usage: node bridge.mjs chrome|firefox
 import puppeteer from "puppeteer-core";
+import { APP, MEDIA_BASE, CHROME_ARGS, buildExtension } from "./env.mjs";
 import { spawn } from "node:child_process";
-import { cpSync, rmSync, readFileSync, writeFileSync } from "node:fs";
+import { rmSync } from "node:fs";
 
 const which = process.argv[2] || "chrome";
-const APP = "http://127.0.0.1:8799";
-const PAGE = "http://127.0.0.1:8800/watch.html";
+const PAGE = MEDIA_BASE + "/watch.html";
 const here = new URL(".", import.meta.url).pathname;
 const EXT = here + ".ext-build-" + which;
 const CHROMIUM = process.env.CHROMIUM_PATH || "/usr/bin/chromium";
@@ -18,9 +18,7 @@ function check(name, ok, detail = "") {
   if (!ok) failures++;
 }
 
-rmSync(EXT, { recursive: true, force: true });
-cpSync(new URL("../../extension", import.meta.url).pathname, EXT, { recursive: true });
-writeFileSync(EXT + "/config.js", readFileSync(EXT + "/config.js", "utf8").replace("http://localhost:8787", APP));
+buildExtension(which === "firefox" ? "firefox" : "chrome", APP, EXT.replace(new URL("../..", import.meta.url).pathname, ""));
 const media = spawn("node", [here + "media-server.mjs"], { stdio: "ignore" });
 await sleep(500);
 
@@ -34,8 +32,8 @@ host.send(JSON.stringify({ t: "hello", name: "Host", clientKey: "host-key", kind
 await sleep(500);
 
 const browser = which === "firefox"
-  ? await puppeteer.launch({ browser: "firefox", executablePath: FIREFOX, headless: true, extraPrefsFirefox: { "media.autoplay.default": 0, "media.autoplay.blocking_policy": 0 } })
-  : await puppeteer.launch({ executablePath: CHROMIUM, headless: true, pipe: true, enableExtensions: [EXT], args: ["--autoplay-policy=no-user-gesture-required", "--no-sandbox"] });
+  ? await puppeteer.launch({ browser: "firefox", executablePath: FIREFOX, headless: true, acceptInsecureCerts: true, extraPrefsFirefox: { "media.autoplay.default": 0, "media.autoplay.blocking_policy": 0 } })
+  : await puppeteer.launch({ executablePath: CHROMIUM, headless: true, acceptInsecureCerts: true, pipe: true, enableExtensions: [EXT], args: [...CHROME_ARGS, "--autoplay-policy=no-user-gesture-required", "--no-sandbox"] });
 if (which === "firefox") {
   const id = await browser.installExtension(EXT);
   check("extension installs in Firefox", !!id, id);

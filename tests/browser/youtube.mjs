@@ -1,9 +1,9 @@
 // Real YouTube: two people in the web app (embedded player) and one with the
 // extension on youtube.com, all in one room. Needs internet access.
 import puppeteer from "puppeteer-core";
-import { cpSync, rmSync, readFileSync, writeFileSync } from "node:fs";
+import { APP, MEDIA_BASE, CHROME_ARGS, buildExtension, watchPage } from "./env.mjs";
+import { rmSync } from "node:fs";
 
-const APP = "http://127.0.0.1:8799";
 const VIDEO = process.env.YT_VIDEO || "https://www.youtube.com/watch?v=aqz-KE-bpKQ"; // Big Buck Bunny, Blender Foundation
 const CHROMIUM = process.env.CHROMIUM_PATH || "/usr/bin/chromium";
 const here = new URL(".", import.meta.url).pathname;
@@ -16,13 +16,11 @@ function check(name, ok, detail = "") {
   if (!ok) failures++;
 }
 
-rmSync(EXT, { recursive: true, force: true });
-cpSync(new URL("../../extension", import.meta.url).pathname, EXT, { recursive: true });
-writeFileSync(EXT + "/config.js", readFileSync(EXT + "/config.js", "utf8").replace(/SYNCROOM_DEFAULT_SERVER = ".*?"/, `SYNCROOM_DEFAULT_SERVER = "${APP}"`));
+buildExtension("chrome", APP, EXT.replace(new URL("../..", import.meta.url).pathname, ""));
 
 const browser = await puppeteer.launch({
-  executablePath: CHROMIUM, headless: true, pipe: true, enableExtensions: [EXT],
-  args: ["--autoplay-policy=no-user-gesture-required", "--no-sandbox", `--user-agent=${UA}`, "--mute-audio"]
+  executablePath: CHROMIUM, headless: true, acceptInsecureCerts: true, pipe: true, enableExtensions: [EXT],
+  args: [...CHROME_ARGS, "--autoplay-policy=no-user-gesture-required", "--no-sandbox", `--user-agent=${UA}`, "--mute-audio"]
 });
 
 // Reads the playing video's time in a page or in the YouTube frame inside it.
@@ -45,7 +43,9 @@ async function waitFor(fn, ms, step = 500) {
 }
 
 // A starts a room with a YouTube link.
+const errors = [];
 const A = await (await browser.createBrowserContext()).newPage();
+watchPage(A, "A", errors);
 await A.goto(APP + "/");
 await A.type("#start-name", "Aditya");
 await A.type("#start-url", VIDEO);
@@ -64,6 +64,7 @@ check("host's YouTube player plays", !!aPlaying, aPlaying ? `t=${aPlaying.t.toFi
 
 // B joins in the web app.
 const B = await (await browser.createBrowserContext()).newPage();
+watchPage(B, "B", errors);
 await B.goto(invite);
 await B.type("#gate-name", "Sam");
 await B.click(".stage-card button[type=submit]");
@@ -105,6 +106,7 @@ if (C) {
   check("panel lists all three", /Aditya/.test(people) && /Sam/.test(people) && /Kai/.test(people));
 }
 
+check("our pages had no script errors or blocked loads", errors.length === 0, errors.slice(0, 3).join("; "));
 await browser.close();
 console.log(failures ? `${failures} failed` : "all passed");
 process.exit(failures ? 1 : 0);

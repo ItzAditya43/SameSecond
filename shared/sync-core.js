@@ -65,7 +65,7 @@
   //
   // player: {
   //   getTime(): seconds, isPaused(): bool, play(), pause(), seek(seconds),
-  //   setRate?(rate), isReady(): bool, isBlocked?(): bool (an advert is showing),
+  //   setRate?(rate), getRate?(): number, isReady(): bool, isBlocked?(): bool (an advert is showing),
   //   isBuffering?(): bool, isLocked?(): bool (the browser refused to start playback
   //   until the viewer taps; the player then stays out of the room's way)
   //   seekThreshold?: seconds, supportsRate?: bool
@@ -95,7 +95,9 @@
 
   SyncController.prototype.setRate = function (r) {
     r = Math.round(r * 100) / 100;
-    if (this.rate === r) return;
+    // Ask the player for its real speed: the site or the viewer may have changed it.
+    var current = this.player.getRate ? Math.round(this.player.getRate() * 100) / 100 : this.rate;
+    if (this.rate === r && current === r) return;
     this.rate = r;
     if (this.player.setRate && this.player.supportsRate !== false) {
       try { this.player.setRate(r); } catch (e) { /* some players refuse custom rates */ }
@@ -128,8 +130,9 @@
       this.mark();
       p.seek(expected);
     } else if (abs > 0.06 && p.supportsRate !== false && p.setRate) {
-      // Speed up or slow down in proportion to the gap, so it closes in about 4 seconds.
-      var nudge = Math.min(0.1, Math.max(0.02, Math.round(abs * 25) / 100));
+      // Speed up or slow down in proportion to the gap (at most 10%), so a
+      // typical slip closes within a few seconds without a visible jump.
+      var nudge = Math.min(0.1, Math.max(0.02, Math.round(abs * 50) / 100));
       this.setRate(gap > 0 ? 1 + nudge : 1 - nudge);
     } else if (abs <= 0.03 || p.supportsRate === false || !p.setRate) {
       this.setRate(1);

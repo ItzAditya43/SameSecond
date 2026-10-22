@@ -16,7 +16,7 @@ Free watch parties. Everyone plays the video on their own device and Syncroom ke
 - Every change is stamped with the time it was sent (in server time), so the room doesn't trail the sender by the network delay.
 - Each device measures the offset between its clock and the server's, and checks itself once a second:
   - under 0.06 s off: leave it alone
-  - 0.06–0.5 s off: play up to 10% faster or slower, in proportion to the gap, until caught up
+  - 0.06–0.5 s off: play up to 10% faster or slower, in proportion to the gap, until caught up (a few seconds)
   - over 0.5 s off: jump to the right position (0.8 s for YouTube and 1 s for Netflix, whose seeks are slow)
 - When someone's video stalls for more than a second, the room holds until they've loaded (up to 15 s, or until they leave).
 - When a browser refuses to start playback until the viewer taps (phones), that player stays out of the room's way and shows a "Tap to start watching" bar.
@@ -42,7 +42,16 @@ npx wrangler login   # opens Cloudflare in your browser; a free account is enoug
 npm run deploy
 ```
 
-`npm run deploy` publishes the site, finds its `…workers.dev` address, builds the extension pointed at that address, and publishes again so the site offers it at `/downloads/syncroom-extension.zip`. It also writes `dist/syncroom-extension.zip` for store uploads. The address is remembered in `.syncroom-url`; for a custom domain run `npm run deploy -- https://your.domain`.
+`npm run deploy` checks you're logged in, publishes the site, finds its `…workers.dev` address, builds the extension pointed at that address, publishes again so the site offers it at `/downloads/syncroom-extension.zip`, and checks the live site answers. The first time, Wrangler may ask you to pick a `workers.dev` subdomain. The address is remembered in `.syncroom-url`; for a custom domain run `npm run deploy -- https://your.domain`.
+
+It also writes the store uploads:
+
+| File | For |
+|---|---|
+| `dist/syncroom-chrome.zip` | Chrome Web Store, Microsoft Edge Add-ons, Opera Add-ons |
+| `dist/syncroom-firefox.zip` | Firefox Add-ons (also Firefox for Android) |
+
+Each package has only the manifest keys its browser understands, so neither shows warnings.
 
 Optional: if some friends can't connect voice (strict networks), create a TURN key in the Cloudflare dashboard (Realtime → TURN) and add it:
 
@@ -51,17 +60,30 @@ npx wrangler secret put TURN_KEY_ID
 npx wrangler secret put TURN_KEY_API_TOKEN
 ```
 
+### Deployment checklist
+
+1. `npm test`, `npm run check:deploy` and `npm run test:browser` pass (GitHub Actions runs them on every push).
+2. `npx wrangler login`, then `npm run deploy`.
+3. Open the printed address on a laptop and a phone, start a YouTube room and join it from the other device.
+4. Install the downloaded extension, start a room on an episode of a site you use (Netflix, Crunchyroll), and have a friend join from the invite link. This is the one flow automated tests can't cover, because it needs real accounts.
+5. Submit `dist/` packages to the stores you want, using [`store/LISTING.md`](store/LISTING.md) and `https://<your-site>/privacy` as the privacy policy.
+
+### How much the free tier covers
+
+Cloudflare's free plan allows 100,000 Durable Object requests a day. Incoming WebSocket messages count 20 to 1, and rooms nobody is talking in hibernate and cost nothing. Each viewer sends a status every 10 s, a clock check every 60 s and a keep-alive every 25 s, which is about 28 counted requests per viewer per hour: roughly **3,300 viewer-hours a day**, or about 330 two-hour movie nights of five people. If a limit is reached, new connections fail until the daily reset at 00:00 UTC; nothing is charged unless you move to a paid plan. Voice goes directly between people and costs nothing; the optional TURN relay includes 1,000 GB a month free.
+
 ### Getting the extension to people
 
 | Where | Cost | Notes |
 |---|---|---|
-| Your site's download page | Free | Friends unzip it and use "Load unpacked" in Chrome, Edge, Brave or Opera. Steps are on `/extension.html`. |
-| Chrome Web Store | One-time $5 | Reaches Chrome and Brave users with one click. Review usually takes a few days. |
-| Microsoft Edge Add-ons | Free | Same zip. |
-| Opera Add-ons | Free | Same zip. |
+| Your site's download page | Free | Friends unzip it and use "Load unpacked" in Chrome, Edge, Brave or Opera. Steps are on `/extension`. |
+| Chrome Web Store | One-time $5 developer registration | Reaches Chrome and Brave users with one click. Review usually takes a few days. |
+| Microsoft Edge Add-ons | Free | Upload the Chrome package. |
 | Firefox Add-ons (AMO) | Free | Firefox only installs signed add-ons, so this is the way for Firefox. A public listing is also what makes it installable on Firefox for Android. |
+| Opera Add-ons | No fee found | Upload the Chrome package. Opera's publishing guidelines don't mention any fee. |
+| Safari (Mac and iPhone App Store) | $99 a year | Needs an Apple developer account and a Mac with Xcode. Not set up in this project. |
 
-Listing text, permission justifications and images are in [`store/LISTING.md`](store/LISTING.md). The privacy policy the stores ask for is served at `/privacy.html`.
+Listing text, permission justifications and images are in [`store/LISTING.md`](store/LISTING.md). The privacy policy the stores ask for is served at `/privacy`.
 
 ## Phones
 
@@ -73,25 +95,37 @@ Listing text, permission justifications and images are in [`store/LISTING.md`](s
 ## Tests
 
 ```sh
-npm test                                   # sync engine + room server (starts wrangler dev itself)
-npm run test:browser                       # real Chromium: website, extension, invite handoff, restarts
-npm run test:browser -- firefox youtube    # also Firefox, and real YouTube (needs internet)
-npm run lint:extension                     # Mozilla's extension linter
+npm test                                          # sync engine + room server (starts wrangler dev itself)
+npm run lint:extension                            # Mozilla's linter on the Firefox package
+npm run check:deploy                              # Wrangler deploy dry run: bundles and validates, uploads nothing
+node scripts/load-test.mjs                        # 40 rooms × 6 people: delivery, speed, free-tier estimate
+npm run test:browser                              # real Chromium: website, extension, invite handoff, restarts
+npm run test:browser -- firefox youtube https     # also Firefox, real YouTube (needs internet), and an HTTPS pass
 ```
 
-Browser tests need Chromium (`CHROMIUM_PATH`, default `/usr/bin/chromium`), ffmpeg to generate test media, and for the `firefox` option Firefox (`FIREFOX_PATH`). GitHub Actions runs `npm test`, the linter and the Chrome browser suites on every push.
+Browser tests need Chromium (`CHROMIUM_PATH`, default `/usr/bin/chromium`), ffmpeg to generate test media, Firefox for the `firefox` option (`FIREFOX_PATH`), and openssl for the `https` option. The browser tests load the packaged builds, exactly as they ship. GitHub Actions runs everything except the YouTube suite on every push.
 
 | Suite | Covers |
 |---|---|
-| `scripts/smoke-test.mjs` | Sync engine decisions, clock sync, the room protocol, permissions, buffering holds, link previews, malformed input |
+| `scripts/smoke-test.mjs` | Sync engine decisions, clock sync, the room protocol, permissions, buffering holds, rate limits, link previews, malformed input |
+| `scripts/load-test.mjs` | Many rooms at once: no lost updates, delivery time, free-tier capacity |
 | `tests/browser/web.mjs` | Two people in the website: play, seek, drift correction, pause, chat, two-way voice, host-only control (Chromium and Firefox) |
-| `tests/browser/extras.mjs` | HLS streams, blocked autoplay on phones, reloads, three people with three-way voice, hostile chat, static pages |
-| `tests/browser/ext.mjs` | The extension on a video tab with a website user; the panel's own buttons and forms |
-| `tests/browser/bridge.mjs` | Invite page → "Open in the extension" → synced tab (Chromium and Firefox) |
+| `tests/browser/extras.mjs` | HLS streams, blocked autoplay on phones, reloads, three people with three-way voice, hostile chat, static pages, no blocked loads |
+| `tests/browser/ext.mjs` | The Chrome package on a video tab with a website user; the panel's own buttons and forms; no manifest warnings |
+| `tests/browser/bridge.mjs` | Invite page → "Open in the extension" → synced tab (Chrome and Firefox packages) |
 | `tests/browser/resilience.mjs` | Server restart mid-room; the browser stopping the extension's background worker |
 | `tests/browser/youtube.mjs` | Real YouTube: embedded players and the extension on youtube.com in one room |
+| `https` option | Repeats the website, extras, extension and handoff suites over HTTPS and WSS, as on the live site |
 
-Not covered by automated tests: Netflix and Crunchyroll (they need real accounts), real phones, and Safari/WebKit (it can't run on Arch Linux without extra system packages). Check those by hand before relying on them.
+Lighthouse scores every page 100 for accessibility, best practices and SEO on a phone-sized screen.
+
+Not covered by automated tests:
+- Netflix and Crunchyroll, which need real accounts.
+- Real phones (phone-sized Chromium is tested).
+- Safari/WebKit, which can't run on Arch Linux without extra system packages.
+- The Firefox sidebar panel, because Firefox's automation can't open extension pages. Its code is the same as Chrome's tested panel.
+
+Check those by hand before relying on them.
 
 ## Files worth knowing
 
