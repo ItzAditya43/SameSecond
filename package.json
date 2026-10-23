@@ -16,7 +16,8 @@
     "release": "npm run shared && node scripts/release.mjs",
     "guide-shots": "node scripts/make-guide-shots.mjs",
     "test:android": "npm run shared && node tests/mobile/android.mjs",
-    "android:firefox": "npm run shared && adb reverse tcp:8787 tcp:8787 && node scripts/pack-extension.mjs http://127.0.0.1:8787 --target firefox --dir dist/android-firefox && npx --yes web-ext run -t firefox-android -s dist/android-firefox --firefox-apk org.mozilla.firefox"
+    "android:firefox": "npm run shared && adb reverse tcp:8787 tcp:8787 && node scripts/pack-extension.mjs http://127.0.0.1:8787 --target firefox --dir dist/android-firefox && npx --yes web-ext run -t firefox-android -s dist/android-firefox --firefox-apk org.mozilla.firefox",
+    "publish:firefox": "npm run shared && node scripts/publish-firefox.mjs"
   },
   "devDependencies": {
     "puppeteer-core": "^25.14.0",

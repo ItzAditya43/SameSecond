@@ -110,6 +110,8 @@ Cloudflare's free plan allows 100,000 Durable Object requests a day. Incoming We
 | Opera Add-ons | No fee found | Upload the Chrome package. Opera's publishing guidelines don't mention any fee. |
 | Safari (Mac and iPhone App Store) | $99 a year | Needs an Apple developer account and a Mac with Xcode. Not set up in this project. |
 
+To submit to Firefox Add-ons from the command line: put your API keys (from https://addons.mozilla.org/developers/addon/api/key/) in `.env.amo` as `AMO_API_KEY=…` and `AMO_API_SECRET=…`, set a `"license"` in `package.json`, then run `npm run publish:firefox` after deploying. Listing text for it is in [`store/amo-listing.json`](store/amo-listing.json).
+
 Listing text, permission justifications and images are in [`store/LISTING.md`](store/LISTING.md). The privacy policy the stores ask for is served at `/privacy`.
 
 ## Phones
@@ -124,7 +126,7 @@ Listing text, permission justifications and images are in [`store/LISTING.md`](s
 Turn on USB debugging on an Android phone (Settings → About phone → tap **Build number** 7 times, then Settings → Developer options → **USB debugging**), plug it in, unlock it and accept the prompt.
 
 ```sh
-npm run test:android      # Chrome on the phone joins a laptop's room: sync, tap-to-start, pause, seek, chat, layout
+npm run test:android      # Brave or Chrome on the phone joins a laptop's room: sync, pause, seek, chat, voice with the real microphone, layout
 npm run android:firefox   # installs the Firefox package into Firefox on the phone, for trying it by hand
 ```
 

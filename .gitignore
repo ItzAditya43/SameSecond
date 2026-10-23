@@ -11,3 +11,4 @@ tests/browser/media/hls/
 tests/browser/.wrangler-state/
 tests/browser/.tls/
 tests/mobile/shots/
+.env.amo
