@@ -20,13 +20,20 @@
   --radius: 10px;
   color-scheme: light;
 }
+/* Dark theme: follows the device unless the viewer picks one with the theme button. */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --bg: #0f131c; --surface: #171d2a; --sunken: #1f2737; --fg: #e9edf5; --muted: #9ba7bd;
     --line: #313c52; --accent: #7ab2fa; --accent-fg: #0a1a33; --brand-ink: #e9edf5; --brand-blue: #7ab2fa; --warn: #f0a25a; --bad: #ff8a7a;
     --stage: #05070b;
     color-scheme: dark;
   }
+}
+:root[data-theme="dark"] {
+  --bg: #0f131c; --surface: #171d2a; --sunken: #1f2737; --fg: #e9edf5; --muted: #9ba7bd;
+  --line: #313c52; --accent: #7ab2fa; --accent-fg: #0a1a33; --brand-ink: #e9edf5; --brand-blue: #7ab2fa; --warn: #f0a25a; --bad: #ff8a7a;
+  --stage: #05070b;
+  color-scheme: dark;
 }
 * { box-sizing: border-box; }
 html, body { height: 100%; }
@@ -176,3 +183,15 @@ input, select {
 .downloads { display: flex; gap: 10px; flex-wrap: wrap; }
 .note { color: var(--muted); font-size: 0.9rem; }
 code { font-family: var(--mono); font-size: 0.85em; background: var(--sunken); padding: 1px 5px; border-radius: 4px; overflow-wrap: anywhere; }
+
+.theme-toggle { font: inherit; font-size: 0.85rem; color: var(--muted); background: none; border: 1px solid var(--line); border-radius: 8px; padding: 5px 10px; cursor: pointer; }
+.theme-toggle:hover { color: var(--fg); border-color: var(--accent); }
+.topbar-end { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+@media (max-width: 520px) {
+  .topbar { gap: 8px; }
+  .nav { gap: 12px; font-size: 0.85rem; }
+  .brand-name { font-size: 1.05rem; }
+  .card { padding: 16px; }
+  .row { flex-wrap: wrap; }
+}
+@media (min-width: 1400px) { .doc-page, .home { max-width: 900px; } }

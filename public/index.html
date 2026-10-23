@@ -23,16 +23,20 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Figtree:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap">
 <link rel="stylesheet" href="/style.css">
+<script src="/theme.js"></script>
 </head>
 <body>
 
 <header class="topbar">
   <a class="brand" href="/" aria-label="SameSecond home"><img class="brand-mark" src="/brand/mark.png" alt="" width="26" height="26"><span class="brand-name">Same<span>Second</span></span></a>
+<div class="topbar-end">
   <nav class="nav" id="site-nav" aria-label="Site">
     <a href="/guide">How it works</a>
     <a href="/extension">Extension</a>
     <a href="https://github.com/ItzAditya43/SyncRoom" rel="noopener">GitHub</a>
   </nav>
+  <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Switch colour theme">Theme: auto</button>
+</div>
   <div class="topbar-room" id="topbar-room" hidden>
     <span class="room-title" id="room-title"></span>
     <button class="btn small" id="copy-invite" type="button">Copy invite link</button>
