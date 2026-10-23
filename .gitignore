@@ -12,3 +12,4 @@ tests/browser/.wrangler-state/
 tests/browser/.tls/
 tests/mobile/shots/
 .env.amo
+tests/browser/.ext-build-live/

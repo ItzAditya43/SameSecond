@@ -86,7 +86,7 @@ await C.goto(room);
 await C.type("#gate-name", "Kai");
 await C.click(".stage-card button[type=submit]");
 await ready(C);
-await sleep(3000);
+await sleep(6000); // joining includes a jump plus a few seconds of gentle catch-up
 let c = await vt(C);
 a = await vt(A);
 check("third person plays in sync", !c.paused && gap(a, c) < 0.15, `gap ${gap(a, c).toFixed(3)}`);

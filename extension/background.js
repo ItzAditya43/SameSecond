@@ -34,7 +34,8 @@ const S = {
 const ready = init();
 
 async function init() {
-  const saved = await api.storage.local.get(["settings", "session"]);
+  const saved = await api.storage.local.get(["settings", "session", "landedAt"]);
+  for (const [k, v] of saved.landedAt || []) landedAt.set(k, new Set(v));
   if (saved.settings) Object.assign(S.settings, saved.settings);
   if (!S.settings.clientKey) {
     S.settings.clientKey = randomId(24);
@@ -223,11 +224,23 @@ function handle(msg) {
 }
 
 // Put the room's tab on the room's video if it's somewhere else.
+// Sites often redirect (to a mirror, a regional domain, a longer address), so
+// remember where the tab landed after we sent it to the room's video and treat
+// that address as the same video. Otherwise we'd keep sending it back.
+const landedAt = new Map(); // room video key -> set of keys the tab landed on
+
+function sameVideo(tabUrl, roomUrl) {
+  const t = SC.urlKey(tabUrl || ""), r = SC.urlKey(roomUrl || "");
+  return t === r || (landedAt.get(r) || new Set()).has(t);
+}
+
 async function followRoomUrl() {
   if (!S.state || S.tabId == null) return;
   let tab;
   try { tab = await api.tabs.get(S.tabId); } catch { return; }
-  if (SC.urlKey(tab.url || "") === SC.urlKey(S.state.url)) return;
+  if (sameVideo(tab.url, S.state.url)) return;
+  if (S.following === SC.urlKey(S.state.url) && Date.now() < S.followUntil) return; // already on its way
+  S.following = SC.urlKey(S.state.url);
   S.followUntil = Date.now() + 15000;
   api.tabs.update(S.tabId, { url: S.state.url }).catch(() => {});
 }
@@ -329,7 +342,15 @@ function isServerPage(url) {
 api.tabs.onUpdated.addListener(async (tabId, info, tab) => {
   await ready;
   if (info.status !== "complete") return;
-  if (tabId === S.tabId) inject(tabId);
+  if (tabId === S.tabId) {
+    // Where the tab ended up after we sent it to the room's video counts as that video.
+    if (S.following && Date.now() < S.followUntil && tab.url && SC.urlKey(tab.url) !== S.following) {
+      if (!landedAt.has(S.following)) landedAt.set(S.following, new Set());
+      landedAt.get(S.following).add(SC.urlKey(tab.url));
+      api.storage.local.set({ landedAt: [...landedAt].map(([k, v]) => [k, [...v]]).slice(-50) }).catch(() => {});
+    }
+    inject(tabId);
+  }
   else if (isServerPage(tab.url)) injectBridge(tabId);
 });
 
@@ -422,7 +443,7 @@ async function maybeNavigate(msg) {
   let tab;
   try { tab = await api.tabs.get(S.tabId); } catch { return; }
   if (!/^https?:/.test(tab.url || "")) return;
-  if (SC.urlKey(tab.url) === SC.urlKey(S.state.url)) return;
+  if (sameVideo(tab.url, S.state.url)) return;
   send({ t: "navigate", url: tab.url, title: tab.title || "", position: msg.position || 0, playing: !!msg.playing, at: msg.at });
 }
 
