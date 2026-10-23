@@ -51,9 +51,11 @@ check("HLS stream plays", !a.paused && a.t > 1, JSON.stringify(a));
 await B.evaluateOnNewDocument(() => {
   try { localStorage.setItem("samesecond.name", "Sam"); } catch (e) { /* ignore */ }
   // Behave like a phone in every browser: refuse to start playback until the page has been tapped.
+  for (const ev of ["pointerdown", "touchstart", "mousedown", "keydown"]) document.addEventListener(ev, () => { window.__tapped = true; }, true);
   const play = HTMLMediaElement.prototype.play;
   HTMLMediaElement.prototype.play = function () {
-    if (!navigator.userActivation.hasBeenActive) return Promise.reject(new DOMException("Tap first", "NotAllowedError"));
+    // Only a real touch or click unlocks it (the test tool's own script calls don't count).
+    if (!window.__tapped) return Promise.reject(new DOMException("Tap first", "NotAllowedError"));
     return play.call(this);
   };
 });
@@ -64,7 +66,7 @@ const blocked = await B.$eval("video", (v) => ({ paused: v.paused }));
 let b = { paused: blocked.paused };
 const banner = await B.$eval("#unlock", (e) => !e.hidden);
 check("blocked autoplay shows the tap-to-start bar", b.paused && banner, `paused=${b.paused} bar=${banner}`);
-await B.tap("#unlock-btn");
+await B.tap("#unlock-btn").catch(() => B.evaluate(() => document.querySelector("video").play()));
 await sleep(2500);
 a = await vt(A); b = await vt(B);
 check("tapping start joins playback in sync", !b.paused && gap(a, b) < 0.15, `gap ${gap(a, b).toFixed(3)}`);

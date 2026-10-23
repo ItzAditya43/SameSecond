@@ -24,6 +24,12 @@ const handler = (req, res) => {
 // MEDIA_TLS=<dir> serves HTTPS with <dir>/cert.pem and <dir>/key.pem, for the HTTPS test pass.
 const tls = process.env.MEDIA_TLS;
 const server = tls ? https.createServer({ cert: readFileSync(tls + "/cert.pem"), key: readFileSync(tls + "/key.pem") }, handler) : http.createServer(handler);
+// If a previous test's server is still shutting down, wait for the port.
+let tries = 0;
+server.on("error", (e) => {
+  if (e.code === "EADDRINUSE" && tries++ < 20) setTimeout(() => server.listen(8800, "127.0.0.1"), 250);
+  else throw e;
+});
 server.listen(8800, "127.0.0.1");
 
 // Exit when the test that started this server goes away, so no stray server keeps the port.
