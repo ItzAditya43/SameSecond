@@ -174,3 +174,7 @@ Check those by hand before relying on them.
 - `extension/background.js`: room connection, tab following, panel.
 - `server/index.js`: the `Room` Durable Object, the message protocol and link previews.
 - `scripts/make-guide-shots.mjs` (`npm run guide-shots`): retakes the website guide screenshots by running the real flows in Chrome.
+
+## License
+
+MIT. See [LICENSE](LICENSE).

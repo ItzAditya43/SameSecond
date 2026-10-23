@@ -113,8 +113,8 @@
     var expected = expectedPosition(this.state, this.now());
     var local = p.getTime();
     var paused = p.isPaused();
-    if (this.state.playing && paused) { this.mark(); p.play(); }
-    if (!this.state.playing && !paused) { this.mark(); p.pause(); }
+    if (this.state.playing && paused) { this.mark("play"); p.play(); }
+    if (!this.state.playing && !paused) { this.mark("pause"); p.pause(); }
     // Seeking while the player is still loading only makes the stall longer.
     if (this.state.playing && p.isBuffering && p.isBuffering()) return;
     var gap = expected - local;
@@ -139,8 +139,13 @@
     }
   };
 
-  // Local changes the controller made itself fire player events too; ignore them briefly.
-  SyncController.prototype.mark = function () { this.ignoreUntil = Date.now() + 900; };
+  // Local changes the controller made itself fire player events too; ignore them
+  // briefly. Only the matching event is ignored: if the controller paused the
+  // player and the viewer then presses play, that play is the viewer's.
+  SyncController.prototype.mark = function (command) {
+    this.ignoreUntil = Date.now() + 900;
+    if (command) this.lastCommand = { type: command, at: Date.now() };
+  };
 
   // Call on the player's play, pause and seek events.
   SyncController.prototype.onLocalEvent = function (type) {
@@ -156,7 +161,8 @@
     // that moment says nothing about what the viewer wants.
     var differs = type === "seeked" ? moved : (paused === this.state.playing || moved);
     if (!differs) return;
-    if (Date.now() < this.ignoreUntil && type !== "seeked") return;
+    var cmd = this.lastCommand;
+    if (cmd && cmd.type === type && Date.now() - cmd.at < 900) return;
     var userDidIt = !this.requireActivation ||
       !(typeof navigator !== "undefined" && navigator.userActivation) ||
       navigator.userActivation.isActive;

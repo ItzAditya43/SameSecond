@@ -26,5 +26,6 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/ItzAditya43/SyncRoom.git"
-  }
+  },
+  "license": "MIT"
 }

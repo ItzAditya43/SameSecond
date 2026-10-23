@@ -83,7 +83,7 @@
         if (isNetflix) return netflix("play");
         var p = v.play();
         if (p && p.catch) p.catch(function (e) {
-          if (e && e.name === "NotAllowedError") { locked = true; toast("Click play once to join the room's playback"); }
+          if (e && e.name === "NotAllowedError") { locked = true; toast("Tap play once to join the room's playback"); }
         });
       },
       pause: function () { if (isNetflix) netflix("pause"); else v.pause(); },
@@ -235,6 +235,8 @@
   timers.push(setInterval(function () {
     scan(false);
     if (controller) controller.tick();
+    // Keep the hint up until the viewer taps play (phones block autoplay).
+    if (active && adapter && adapter.isLocked && adapter.isLocked()) toast("Tap play once to join the room's playback");
   }, 1000));
   timers.push(setInterval(function () {
     if (active && controller) {

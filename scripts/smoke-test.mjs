@@ -143,6 +143,18 @@ await test("events caused by the room itself are not echoed back", async () => {
   assert.equal(sent.length, 0);
 });
 
+await test("pressing play right after joining a paused room counts", async () => {
+  const player = fakePlayer({ t: 0, paused: true });
+  const sent = [];
+  const c = new SC.SyncController({ player, send: (m) => sent.push(m), now: () => 0 });
+  c.applyRemote({ playing: false, position: 88.5, updatedAt: 0 }); // the join jumps the player to 88.5
+  player.paused = false; // the viewer presses play straight away
+  c.onLocalEvent("play");
+  await sleep(200);
+  assert.equal(sent.length, 1, "the play was ignored");
+  assert.equal(sent[0].playing, true);
+});
+
 await test("viewers without control are pulled back", async () => {
   const player = fakePlayer({ t: 40, paused: false });
   const sent = [];
