@@ -1,4 +1,4 @@
-// Syncroom sync engine, shared by the web app and the extension.
+// SameSecond sync engine, shared by the web app and the extension.
 // Edit this file in shared/ and run `npm run shared` to copy it into
 // public/ and extension/.
 (function (root) {

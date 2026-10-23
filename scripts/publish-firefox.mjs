@@ -19,7 +19,7 @@ const root = fileURLToPath(new URL("..", import.meta.url));
 const fail = (msg) => { console.error(msg); process.exit(1); };
 const shell = process.platform === "win32";
 
-const url = (process.argv[2] || (existsSync(root + ".syncroom-url") ? readFileSync(root + ".syncroom-url", "utf8") : "")).trim().replace(/\/+$/, "");
+const url = (process.argv[2] || (existsSync(root + ".samesecond-url") ? readFileSync(root + ".samesecond-url", "utf8") : "")).trim().replace(/\/+$/, "");
 if (!/^https:\/\/\S+$/.test(url)) fail("Deploy first (npm run deploy) so the package points at your live site.");
 
 const env = {};

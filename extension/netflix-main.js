@@ -2,8 +2,8 @@
 // element is changed directly, so play, pause and seek go through its API.
 (function () {
   "use strict";
-  if (window.__syncroomNetflix) return;
-  window.__syncroomNetflix = true;
+  if (window.__samesecondNetflix) return;
+  window.__samesecondNetflix = true;
 
   function player() {
     try {
@@ -17,7 +17,7 @@
   }
 
   window.addEventListener("message", function (e) {
-    if (e.source !== window || !e.data || e.data.__syncroom !== "nf") return;
+    if (e.source !== window || !e.data || e.data.__samesecond !== "nf") return;
     var p = player();
     if (!p) return;
     if (e.data.cmd === "seek" && typeof e.data.ms === "number") p.seek(e.data.ms);

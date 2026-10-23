@@ -1,4 +1,4 @@
-// Syncroom panel: start or join a room, invite link, people, chat.
+// SameSecond panel: start or join a room, invite link, people, chat.
 (function () {
   "use strict";
   var api = globalThis.browser || globalThis.chrome;
@@ -9,7 +9,7 @@
   var chatCount = -1;
 
   function connect() {
-    port = api.runtime.connect({ name: "syncroom-panel" });
+    port = api.runtime.connect({ name: "samesecond-panel" });
     port.onMessage.addListener(function (msg) {
       if (msg.type === "snapshot") render(msg);
     });

@@ -48,7 +48,7 @@ await I.click(".stage-card button[type=submit]");
 await sleep(2000);
 const card = await I.$eval("#stage", (e) => e.textContent);
 check("invite page explains the site needs the extension", /127\.0\.0\.1/.test(card) && /Episode 7/.test(card), card.slice(0, 90));
-const hasExt = await I.evaluate(() => !!document.documentElement.dataset.syncroomExt);
+const hasExt = await I.evaluate(() => !!document.documentElement.dataset.samesecondExt);
 check("invite page detects the extension", hasExt);
 await I.screenshot({ path: here + `shots/invite-ext-${which}.png` });
 

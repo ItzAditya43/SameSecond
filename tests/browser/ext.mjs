@@ -65,7 +65,7 @@ const lobbyShown = await P.$eval("#lobby", (e) => !e.hidden);
 check("panel shows the lobby", lobbyShown);
 await P.evaluate(async (url) => {
   const [tab] = await chrome.tabs.query({ url });
-  const port = chrome.runtime.connect({ name: "syncroom-panel" });
+  const port = chrome.runtime.connect({ name: "samesecond-panel" });
   port.postMessage({ type: "start", tabId: tab.id, name: "Aditya" });
 }, MEDIA);
 await P.waitForFunction(() => !document.getElementById("room").hidden && document.getElementById("invite").value, { timeout: 8000 });

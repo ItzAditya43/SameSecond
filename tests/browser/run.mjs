@@ -27,7 +27,7 @@ if (!existsSync(here + "media/hls/index.m3u8")) {
   ffmpeg(["-i", here + "media/test.mp4", "-c", "copy", "-hls_time", "4", "-hls_playlist_type", "vod",
     "-hls_segment_filename", here + "media/hls/seg%03d.ts", here + "media/hls/index.m3u8"]);
 }
-spawnSync("node", [root + "scripts/pack-extension.mjs", "http://localhost:8787", "--target", "chrome", "--out", "public/downloads/syncroom-extension.zip"], { stdio: "inherit" });
+spawnSync("node", [root + "scripts/pack-extension.mjs", "http://localhost:8787", "--target", "chrome", "--out", "public/downloads/samesecond-extension.zip"], { stdio: "inherit" });
 
 const dev = spawn("npx", ["wrangler", "dev", "--port", "8799", "--ip", "127.0.0.1", "--log-level", "warn"], { cwd: root, stdio: "ignore", detached: true });
 for (let i = 0; ; i++) {
@@ -66,7 +66,7 @@ if (opts.includes("https")) {
     if (i > 80) { process.kill(-secure.pid); throw new Error("HTTPS wrangler dev did not start"); }
     await new Promise((r) => setTimeout(r, 500));
   }
-  const env = { SYNCROOM_APP: "https://127.0.0.1:8797", SYNCROOM_MEDIA: "https://127.0.0.1:8800", MEDIA_TLS: tls, NODE_TLS_REJECT_UNAUTHORIZED: "0" };
+  const env = { SAMESECOND_APP: "https://127.0.0.1:8797", SAMESECOND_MEDIA: "https://127.0.0.1:8800", MEDIA_TLS: tls, NODE_TLS_REJECT_UNAUTHORIZED: "0" };
   for (const [file, ...args] of [["web.mjs", "chrome"], ["extras.mjs"], ["ext.mjs", "chrome"], ["bridge.mjs", "chrome"]]) suite(file, args, env, " (https)");
   try { process.kill(-secure.pid); } catch { /* already stopped */ }
 }

@@ -6,7 +6,7 @@ tests/browser/media/test.mp4
 tests/browser/shots/
 tests/browser/.ext-build*/
 public/downloads/
-.syncroom-url
+.samesecond-url
 tests/browser/media/hls/
 tests/browser/.wrangler-state/
 tests/browser/.tls/

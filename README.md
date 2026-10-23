@@ -1,9 +1,11 @@
-# Syncroom
+<p align="center"><img src="store/logo-on-white.png" alt="SameSecond" width="220"></p>
 
-Free watch parties. Everyone plays the video on their own device and Syncroom keeps the players on the same second. Video never passes through Syncroom, so there's no re-stream lag, DRM sites like Netflix keep working, and there's nothing to pay for.
+# SameSecond
+
+Free watch parties. Everyone plays the video on their own device and SameSecond keeps the players on the same second. Video never passes through SameSecond, so there's no re-stream lag, DRM sites like Netflix keep working, and there's nothing to pay for.
 
 <p>
-  <img src="public/guide/web-2-room-laptop.webp" alt="A Syncroom room on a laptop playing a YouTube video in sync with a friend" width="66%">
+  <img src="public/guide/web-2-room-laptop.webp" alt="A SameSecond room on a laptop playing a video in sync with a friend" width="66%">
   <img src="public/guide/web-3-room-phone.webp" alt="The same room on a phone, in sync, with chat" width="24%">
 </p>
 
@@ -15,14 +17,14 @@ The deployed website has a picture guide at `/guide` and install steps at `/exte
 
 ## Install the extension from GitHub
 
-1. Download `syncroom-chrome.zip` from the [latest release](https://github.com/ItzAditya43/SyncRoom/releases/latest) and unzip it somewhere you'll keep it.
+1. Download `samesecond-chrome.zip` from the [latest release](https://github.com/ItzAditya43/SyncRoom/releases/latest) and unzip it somewhere you'll keep it.
 2. Open `chrome://extensions` (`edge://extensions` in Edge, `opera://extensions` in Opera) and turn on **Developer mode**.
 3. Click **Load unpacked** and choose the unzipped folder.
-4. Pin Syncroom from the puzzle-piece menu, open an episode, click the button and press **Start a room on this tab**.
+4. Pin SameSecond from the puzzle-piece menu, open an episode, click the button and press **Start a room on this tab**.
 
 | Developer mode | Load unpacked | Installed |
 |---|---|---|
-| ![Developer mode switch](public/guide/chrome-1-developer-mode.webp) | ![Load unpacked button](public/guide/chrome-2-load-unpacked.webp) | ![Syncroom installed](public/guide/chrome-3-installed.webp) |
+| ![Developer mode switch](public/guide/chrome-1-developer-mode.webp) | ![Load unpacked button](public/guide/chrome-2-load-unpacked.webp) | ![SameSecond installed](public/guide/chrome-3-installed.webp) |
 
 Firefox only installs signed add-ons, so Firefox users install it from Firefox Add-ons once it's listed. The release packages are built for one deployed site; until the first release exists, build your own with `npm run deploy`.
 
@@ -67,14 +69,14 @@ npx wrangler login   # opens Cloudflare in your browser; a free account is enoug
 npm run deploy
 ```
 
-`npm run deploy` checks you're logged in, publishes the site, finds its `…workers.dev` address, builds the extension pointed at that address, publishes again so the site offers it at `/downloads/syncroom-extension.zip`, and checks the live site answers. The first time, Wrangler may ask you to pick a `workers.dev` subdomain. The address is remembered in `.syncroom-url`; for a custom domain run `npm run deploy -- https://your.domain`.
+`npm run deploy` checks you're logged in, publishes the site, finds its `…workers.dev` address, builds the extension pointed at that address, publishes again so the site offers it at `/downloads/samesecond-extension.zip`, and checks the live site answers. The first time, Wrangler may ask you to pick a `workers.dev` subdomain. The address is remembered in `.samesecond-url`; for a custom domain run `npm run deploy -- https://your.domain`.
 
 It also writes the store uploads:
 
 | File | For |
 |---|---|
-| `dist/syncroom-chrome.zip` | Chrome Web Store, Microsoft Edge Add-ons, Opera Add-ons |
-| `dist/syncroom-firefox.zip` | Firefox Add-ons (also Firefox for Android) |
+| `dist/samesecond-chrome.zip` | Chrome Web Store, Microsoft Edge Add-ons, Opera Add-ons |
+| `dist/samesecond-firefox.zip` | Firefox Add-ons (also Firefox for Android) |
 
 Each package has only the manifest keys its browser understands, so neither shows warnings.
 

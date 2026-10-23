@@ -1,12 +1,12 @@
 {
-  "name": "syncroom",
+  "name": "samesecond",
   "version": "0.1.0",
   "private": true,
   "type": "module",
   "description": "Free watch parties: everyone plays their own video, only the timecode travels.",
   "scripts": {
     "shared": "node scripts/copy-shared.mjs",
-    "dev": "npm run shared && node scripts/pack-extension.mjs http://localhost:8787 --target chrome --out public/downloads/syncroom-extension.zip && wrangler dev",
+    "dev": "npm run shared && node scripts/pack-extension.mjs http://localhost:8787 --target chrome --out public/downloads/samesecond-extension.zip && wrangler dev",
     "deploy": "node scripts/deploy.mjs",
     "pack:extension": "npm run shared && node scripts/pack-extension.mjs",
     "test": "npm run shared && node scripts/smoke-test.mjs",

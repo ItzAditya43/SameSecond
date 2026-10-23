@@ -1,4 +1,4 @@
-// Deploys Syncroom to Cloudflare and publishes a matching extension download.
+// Deploys SameSecond to Cloudflare and publishes a matching extension download.
 // Usage: npm run deploy                     (finds your workers.dev address itself)
 //        npm run deploy -- https://my.site  (for a custom domain)
 import { spawn, spawnSync } from "node:child_process";
@@ -6,7 +6,7 @@ import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
-const cache = root + ".syncroom-url";
+const cache = root + ".samesecond-url";
 const shell = process.platform === "win32";
 
 function run(cmd, args) {
@@ -37,7 +37,7 @@ if (who.status !== 0 || /not authenticated|You are not logged in/i.test((who.std
 
 run("node", ["scripts/copy-shared.mjs"]);
 
-let url = process.argv[2] || process.env.SYNCROOM_URL || (existsSync(cache) ? readFileSync(cache, "utf8").trim() : "");
+let url = process.argv[2] || process.env.SAMESECOND_URL || (existsSync(cache) ? readFileSync(cache, "utf8").trim() : "");
 if (url && !/^https:\/\/[^\s"]+$/.test(url)) {
   console.error(`The site address must start with https:// (got ${url})`);
   process.exit(1);
@@ -54,7 +54,7 @@ url = url.replace(/\/+$/, "");
 writeFileSync(cache, url + "\n");
 
 console.log(`\nBuilding the extension for ${url}…`);
-run("node", ["scripts/pack-extension.mjs", url, "--target", "chrome", "--out", "public/downloads/syncroom-extension.zip"]);
+run("node", ["scripts/pack-extension.mjs", url, "--target", "chrome", "--out", "public/downloads/samesecond-extension.zip"]);
 run("node", ["scripts/pack-extension.mjs", url]);
 
 console.log("\nPublishing…\n");
@@ -67,8 +67,8 @@ for (let i = 0; i < 10 && !healthy; i++) {
   if (!healthy) await new Promise((r) => setTimeout(r, 3000));
 }
 console.log(`
-${healthy ? "Syncroom is live" : "Deployed, but the site didn't answer yet (new workers.dev addresses can take a minute)"}: ${url}
-Extension download:  ${url}/downloads/syncroom-extension.zip
-Store uploads:       dist/syncroom-chrome.zip (Chrome, Edge, Opera)
-                     dist/syncroom-firefox.zip (Firefox)
+${healthy ? "SameSecond is live" : "Deployed, but the site didn't answer yet (new workers.dev addresses can take a minute)"}: ${url}
+Extension download:  ${url}/downloads/samesecond-extension.zip
+Store uploads:       dist/samesecond-chrome.zip (Chrome, Edge, Opera)
+                     dist/samesecond-firefox.zip (Firefox)
 Privacy policy URL:  ${url}/privacy`);

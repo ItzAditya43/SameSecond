@@ -1,4 +1,4 @@
-// Syncroom room server: a Cloudflare Worker that serves the web app and
+// SameSecond room server: a Cloudflare Worker that serves the web app and
 // gives every room its own Durable Object. The room only relays small
 // messages (play, pause, seek, chat, voice signalling); video never passes
 // through here.
@@ -63,9 +63,9 @@ async function page(request, env, url) {
       if (info.exists) {
         let site = "";
         try { site = new URL(info.url).hostname.replace(/^www\./, ""); } catch { /* ignore */ }
-        title = info.title ? `Join my watch party: ${info.title}` : "Join my watch party on Syncroom";
+        title = info.title ? `Join my watch party: ${info.title}` : "Join my watch party on SameSecond";
         const here = info.members === 1 ? "1 person is here" : `${info.members} people are here`;
-        description = `Watching${site ? " on " + site : ""} with Syncroom. ${here}.`;
+        description = `Watching${site ? " on " + site : ""} with SameSecond. ${here}.`;
       }
     } catch { /* fall back to the defaults in the page */ }
   }

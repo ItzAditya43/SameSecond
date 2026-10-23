@@ -13,7 +13,7 @@ const shell = process.platform === "win32";
 const fail = (msg) => { console.error(msg); process.exit(1); };
 const run = (cmd, args, opts = {}) => spawnSync(cmd, args, { cwd: root, encoding: "utf8", shell, ...opts });
 
-const url = (process.argv[2] || (existsSync(root + ".syncroom-url") ? readFileSync(root + ".syncroom-url", "utf8") : "")).trim().replace(/\/+$/, "");
+const url = (process.argv[2] || (existsSync(root + ".samesecond-url") ? readFileSync(root + ".samesecond-url", "utf8") : "")).trim().replace(/\/+$/, "");
 if (!url) fail("Deploy first (npm run deploy), or pass the site address: npm run release -- https://your-site");
 if (!/^https:\/\/\S+$/.test(url)) fail(`The site address must start with https:// (got ${url})`);
 
@@ -27,14 +27,14 @@ for (const target of ["chrome", "firefox"]) {
   if (r.status !== 0) process.exit(1);
 }
 
-const notes = `Syncroom extension ${version}, set up for ${url}
+const notes = `SameSecond extension ${version}, set up for ${url}
 
-**Chrome, Edge, Brave or Opera:** download \`syncroom-chrome.zip\`, unzip it, open \`chrome://extensions\`, turn on Developer mode, click **Load unpacked** and pick the unzipped folder. Step-by-step pictures: ${url}/extension
+**Chrome, Edge, Brave or Opera:** download \`samesecond-chrome.zip\`, unzip it, open \`chrome://extensions\`, turn on Developer mode, click **Load unpacked** and pick the unzipped folder. Step-by-step pictures: ${url}/extension
 
-**Firefox:** \`syncroom-firefox.zip\` is the package for Firefox Add-ons. Firefox only installs signed add-ons, so install it from Firefox Add-ons once it's listed.
+**Firefox:** \`samesecond-firefox.zip\` is the package for Firefox Add-ons. Firefox only installs signed add-ons, so install it from Firefox Add-ons once it's listed.
 
 Start a watch party: ${url}`;
 
-const r = run("gh", ["release", "create", tag, "dist/syncroom-chrome.zip", "dist/syncroom-firefox.zip", "--title", `Syncroom ${version}`, "--notes", notes], { stdio: "inherit" });
+const r = run("gh", ["release", "create", tag, "dist/samesecond-chrome.zip", "dist/samesecond-firefox.zip", "--title", `SameSecond ${version}`, "--notes", notes], { stdio: "inherit" });
 if (r.status !== 0) process.exit(1);
 console.log(`\nReleased ${tag}. The website's download buttons now serve these packages.`);

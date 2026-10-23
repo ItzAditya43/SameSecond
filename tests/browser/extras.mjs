@@ -49,7 +49,7 @@ check("HLS stream plays", !a.paused && a.t > 1, JSON.stringify(a));
 
 // B arrives with a saved name, so it joins without tapping anything.
 await B.evaluateOnNewDocument(() => {
-  try { localStorage.setItem("syncroom.name", "Sam"); } catch (e) { /* ignore */ }
+  try { localStorage.setItem("samesecond.name", "Sam"); } catch (e) { /* ignore */ }
   // Behave like a phone in every browser: refuse to start playback until the page has been tapped.
   const play = HTMLMediaElement.prototype.play;
   HTMLMediaElement.prototype.play = function () {
@@ -119,7 +119,7 @@ const pwned = await A.evaluate(() => window.__pwned === 1);
 check("chat markup is shown as text, not run", !pwned && raw.includes("&lt;img") && !raw.includes("<b>bold"), raw.slice(-120));
 
 // Pages.
-const dl = await fetch(APP + "/downloads/syncroom-extension.zip");
+const dl = await fetch(APP + "/downloads/samesecond-extension.zip");
 const zipBytes = Buffer.from(await dl.arrayBuffer());
 check("extension download is served as a zip", dl.ok && /zip|octet/.test(dl.headers.get("content-type") || "") && zipBytes.readUInt32LE(0) === 0x04034b50, dl.headers.get("content-type"));
 await A.goto(APP + "/extension");
@@ -129,7 +129,7 @@ await A.goto(APP + "/privacy");
 check("privacy page loads", /What the room server receives/.test(await A.content()));
 const bad = await A.goto(APP + "/r/doesnotexist1");
 await A.waitForFunction(() => document.querySelector(".stage-card h2, .stage-card input"), { timeout: 5000 });
-await A.evaluate(() => localStorage.setItem("syncroom.name", "Aditya"));
+await A.evaluate(() => localStorage.setItem("samesecond.name", "Aditya"));
 await A.reload();
 await A.waitForFunction(() => /isn't available/.test(document.body.textContent), { timeout: 8000 }).then(() => check("a dead invite link says the room isn't available", true), () => check("a dead invite link says the room isn't available", false));
 

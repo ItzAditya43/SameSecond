@@ -1,7 +1,7 @@
 // Many rooms at once: checks every play/seek reaches everyone, measures how
 // fast, and estimates how much use Cloudflare's free tier covers.
 // Usage: node scripts/load-test.mjs            (starts wrangler dev itself)
-//        SYNCROOM_URL=https://… ROOMS=20 PEOPLE=5 SECONDS=30 node scripts/load-test.mjs
+//        SAMESECOND_URL=https://… ROOMS=20 PEOPLE=5 SECONDS=30 node scripts/load-test.mjs
 import { spawn } from "node:child_process";
 
 const ROOMS = Number(process.env.ROOMS || 40);
@@ -9,7 +9,7 @@ const PEOPLE = Number(process.env.PEOPLE || 6);
 const SECONDS = Number(process.env.SECONDS || 20);
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-let base = process.env.SYNCROOM_URL;
+let base = process.env.SAMESECOND_URL;
 let dev = null;
 if (!base) {
   base = "http://127.0.0.1:8796";

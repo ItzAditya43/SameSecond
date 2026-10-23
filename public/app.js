@@ -1,4 +1,4 @@
-// Syncroom web app: landing page and the room (YouTube or direct-link
+// SameSecond web app: landing page and the room (YouTube or direct-link
 // playback, chat, people, voice). Works on phones and laptops.
 (function () {
   "use strict";
@@ -28,8 +28,8 @@
   }
 
   function clientKey() {
-    var k = store.get("syncroom.clientKey");
-    if (!k) { k = randomId(24); store.set("syncroom.clientKey", k); }
+    var k = store.get("samesecond.clientKey");
+    if (!k) { k = randomId(24); store.set("samesecond.clientKey", k); }
     return k;
   }
 
@@ -60,7 +60,7 @@
     return node;
   }
 
-  function extensionPresent() { return document.documentElement.dataset.syncroomExt; }
+  function extensionPresent() { return document.documentElement.dataset.samesecondExt; }
 
   function siteName(url) {
     try { return new URL(url).hostname.replace(/^www\./, ""); } catch (e) { return "a website"; }
@@ -71,7 +71,7 @@
   function initHome() {
     $("view-home").hidden = false;
     var name = $("start-name");
-    name.value = store.get("syncroom.name") || "";
+    name.value = store.get("samesecond.name") || "";
 
     $("start-form").addEventListener("submit", function (e) {
       e.preventDefault();
@@ -89,9 +89,9 @@
         hint.className = "hint bad";
         return;
       }
-      store.set("syncroom.name", name.value.trim());
+      store.set("samesecond.name", name.value.trim());
       var id = randomId(8);
-      session.set("syncroom.create." + id, JSON.stringify({ url: c.kind === "youtube" ? c.pageUrl : c.url, position: c.start || 0 }));
+      session.set("samesecond.create." + id, JSON.stringify({ url: c.kind === "youtube" ? c.pageUrl : c.url, position: c.start || 0 }));
       location.href = "/r/" + id;
     });
 
@@ -99,7 +99,7 @@
       e.preventDefault();
       var id = parseRoomCode($("join-code").value);
       if (id) location.href = "/r/" + id;
-      else toast("That isn't a Syncroom invite link or code.");
+      else toast("That isn't a SameSecond invite link or code.");
     });
 
     setTimeout(function () {
@@ -119,7 +119,7 @@
     R = {
       id: id,
       kind: params.get("voice") === "1" ? "voice" : "web",
-      name: store.get("syncroom.name") || "",
+      name: store.get("samesecond.name") || "",
       ws: null,
       connected: false,
       everConnected: false,
@@ -143,7 +143,7 @@
     $("topbar-room").hidden = false;
     $("site-nav").hidden = true;
     $("room-title").textContent = "Room " + id;
-    document.title = "Room " + id + " · Syncroom";
+    document.title = "Room " + id + " · SameSecond";
     R.voice = new VoiceMesh(send);
 
     bindRoomUi();
@@ -159,7 +159,7 @@
       var v = input.value.trim();
       if (!v) { input.focus(); return; }
       R.name = v;
-      store.set("syncroom.name", v);
+      store.set("samesecond.name", v);
       connect();
     });
     stageCard([el("h2", { text: "You're invited to watch together" }), el("p", { text: "Pick a name so the others know who's here." }), form]);
@@ -192,7 +192,7 @@
       R.connected = true;
       R.retry = 0;
       var hello = { t: "hello", name: R.name, clientKey: clientKey(), kind: R.kind };
-      var pending = session.get("syncroom.create." + R.id);
+      var pending = session.get("samesecond.create." + R.id);
       if (pending) {
         try { hello.create = JSON.parse(pending); } catch (e) { /* ignore */ }
       }
@@ -241,7 +241,7 @@
       case "welcome":
         R.everConnected = true;
         $("side").hidden = false;
-        session.del("syncroom.create." + R.id);
+        session.del("samesecond.create." + R.id);
         if (!R.clock.samples.length) R.clock.offset = msg.serverTime - Date.now();
         R.you = msg.you;
         R.host = msg.host;
@@ -346,7 +346,7 @@
 
   function setTitle(t) {
     $("room-title").textContent = t;
-    document.title = t + " · Syncroom";
+    document.title = t + " · SameSecond";
   }
 
   function showPageCard(url) {
@@ -357,7 +357,7 @@
       actions.appendChild(el("button", {
         class: "btn primary", type: "button", text: "Open in the extension",
         onclick: function () {
-          window.postMessage({ source: "syncroom-page", type: "join", roomId: R.id, name: R.name }, location.origin);
+          window.postMessage({ source: "samesecond-page", type: "join", roomId: R.id, name: R.name }, location.origin);
           toast("Opening " + site + " in a new tab");
         }
       }));
@@ -369,7 +369,7 @@
       el("h2", { text: R.title || "Watching on " + site }),
       el("p", { text: ext
         ? "This video plays inside " + site + ". The extension opens it in a new tab and keeps it in sync. You'll need to be signed in to your own account."
-        : "This video plays inside " + site + ", so it needs the Syncroom extension on a laptop or PC, signed in to your own account. On this device you can still chat and join voice." }),
+        : "This video plays inside " + site + ", so it needs the SameSecond extension on a laptop or PC, signed in to your own account. On this device you can still chat and join voice." }),
       actions
     ]);
   }
@@ -667,7 +667,7 @@
       var link = location.origin + "/r/" + R.id;
       var touch = window.matchMedia && window.matchMedia("(pointer: coarse)").matches;
       if (touch && navigator.share) {
-        navigator.share({ title: "Watch with me on Syncroom", url: link }).catch(function () { /* dismissed */ });
+        navigator.share({ title: "Watch with me on SameSecond", url: link }).catch(function () { /* dismissed */ });
         return;
       }
       if (navigator.clipboard) {

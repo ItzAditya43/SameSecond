@@ -116,7 +116,7 @@ const gap = (x, y) => Math.abs((x.t - (x.paused ? 0 : x.now / 1000)) - (y.t - (y
 const P = await phoneBrowser.newPage();
 // Start as a first-time visitor: forget the name saved by an earlier run.
 await P.goto(PHONE_APP + "/privacy");
-await P.evaluate(() => { try { localStorage.removeItem("syncroom.name"); } catch (e) { /* ignore */ } });
+await P.evaluate(() => { try { localStorage.removeItem("samesecond.name"); } catch (e) { /* ignore */ } });
 await P.goto(invite.replace(APP, PHONE_APP));
 await P.waitForSelector("#gate-name", { timeout: 15000 });
 await P.screenshot({ path: shots + "1-invite.png" });
@@ -170,8 +170,8 @@ await P.screenshot({ path: shots + "3-chat.png" });
 // --- Voice with the phone's real microphone ---
 // Brave and Android ask for microphone permission; tap "Allow" through adb.
 function tapText(pattern) {
-  adb("-s", serial, "shell", "uiautomator", "dump", "/sdcard/syncroom-ui.xml");
-  const xml = adb("-s", serial, "shell", "cat", "/sdcard/syncroom-ui.xml").stdout;
+  adb("-s", serial, "shell", "uiautomator", "dump", "/sdcard/samesecond-ui.xml");
+  const xml = adb("-s", serial, "shell", "cat", "/sdcard/samesecond-ui.xml").stdout;
   for (const m of xml.matchAll(/<node [^>]*?text="([^"]*)"[^>]*?bounds="\[(\d+),(\d+)\]\[(\d+),(\d+)\]"/g)) {
     if (pattern.test(m[1])) {
       const x = (Number(m[2]) + Number(m[4])) >> 1, y = (Number(m[3]) + Number(m[5])) >> 1;

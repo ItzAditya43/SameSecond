@@ -1,5 +1,5 @@
 // End-to-end check of the room server plus unit checks of the sync engine.
-// Starts `wrangler dev` itself unless SYNCROOM_URL points at a running server.
+// Starts `wrangler dev` itself unless SAMESECOND_URL points at a running server.
 import { spawn } from "node:child_process";
 import assert from "node:assert/strict";
 import "../shared/sync-core.js";
@@ -218,7 +218,7 @@ await test("buffering is reported after a second and cleared after", () => {
 
 // ---------- room server ----------
 
-let base = process.env.SYNCROOM_URL;
+let base = process.env.SAMESECOND_URL;
 let dev = null;
 if (!base) {
   base = "http://127.0.0.1:8799";
@@ -276,7 +276,7 @@ await test("health check responds", async () => {
 
 await test("web app is served, including invite paths", async () => {
   const home = await fetch(`${base}/`);
-  assert.match(await home.text(), /Syncroom/);
+  assert.match(await home.text(), /SameSecond/);
   const invite = await fetch(`${base}/r/${room}`);
   assert.equal(invite.status, 200);
   assert.match(await invite.text(), /app\.js/);
@@ -430,10 +430,10 @@ await test("host gets host rights back on reconnect", async () => {
 await test("invite links get a link preview naming the video", async () => {
   const html = await (await fetch(`${base}/r/${room}`)).text();
   assert.match(html, /property="og:title" content="Join my watch party: Episode 2"/);
-  assert.match(html, /property="og:description" content="Watching on netflix\.com with Syncroom\./);
+  assert.match(html, /property="og:description" content="Watching on netflix\.com with SameSecond\./);
   assert.match(html, new RegExp(`property="og:image" content="${base.replace(/[.]/g, "\\.")}/og\\.png"`));
   const home = await (await fetch(`${base}/`)).text();
-  assert.match(home, /og:title" content="Join my watch party on Syncroom"/);
+  assert.match(home, /og:title" content="Join my watch party on SameSecond"/);
   const og = await fetch(`${base}/og.png`);
   assert.equal(og.headers.get("content-type"), "image/png");
 });

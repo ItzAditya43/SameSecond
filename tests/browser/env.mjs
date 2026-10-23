@@ -1,9 +1,9 @@
-// Shared settings for the browser tests. Set SYNCROOM_APP / SYNCROOM_MEDIA to
+// Shared settings for the browser tests. Set SAMESECOND_APP / SAMESECOND_MEDIA to
 // run against another address (run.mjs does this for the HTTPS pass).
 import { spawnSync } from "node:child_process";
 
-export const APP = process.env.SYNCROOM_APP || "http://127.0.0.1:8799";
-export const MEDIA_BASE = process.env.SYNCROOM_MEDIA || "http://127.0.0.1:8800";
+export const APP = process.env.SAMESECOND_APP || "http://127.0.0.1:8799";
+export const MEDIA_BASE = process.env.SAMESECOND_MEDIA || "http://127.0.0.1:8800";
 export const HTTPS = APP.startsWith("https:");
 export const CHROME_ARGS = HTTPS ? ["--ignore-certificate-errors"] : [];
 

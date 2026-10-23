@@ -54,7 +54,7 @@ const P = await browser.newPage();
 await P.goto(`chrome-extension://${extId}/panel.html`);
 await P.evaluate(async (url) => {
   const [tab] = await chrome.tabs.query({ url });
-  chrome.runtime.connect({ name: "syncroom-panel" }).postMessage({ type: "start", tabId: tab.id, name: "Aditya" });
+  chrome.runtime.connect({ name: "samesecond-panel" }).postMessage({ type: "start", tabId: tab.id, name: "Aditya" });
 }, MEDIA);
 await P.waitForFunction(() => document.getElementById("invite").value, { timeout: 8000 });
 const invite = await P.$eval("#invite", (e) => e.value);

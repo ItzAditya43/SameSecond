@@ -1,9 +1,9 @@
-// Syncroom sync script. Runs in every frame of the room's tab; the frame
+// SameSecond sync script. Runs in every frame of the room's tab; the frame
 // holding the largest video becomes the active one and keeps it in sync.
 (function () {
   "use strict";
-  if (window.__syncroomLoaded) return;
-  window.__syncroomLoaded = true;
+  if (window.__samesecondLoaded) return;
+  window.__samesecondLoaded = true;
 
   var api = globalThis.browser || globalThis.chrome;
   var SC = globalThis.SyncCore;
@@ -31,7 +31,7 @@
   function connect() {
     if (dead) return;
     try {
-      port = api.runtime.connect({ name: "syncroom-frame" });
+      port = api.runtime.connect({ name: "samesecond-frame" });
     } catch (e) {
       // The extension was reloaded or removed; this copy of the script is orphaned.
       shutdown();
@@ -60,7 +60,7 @@
   }
 
   function netflix(cmd, extra) {
-    var msg = { __syncroom: "nf", cmd: cmd };
+    var msg = { __samesecond: "nf", cmd: cmd };
     for (var k in extra) msg[k] = extra[k];
     window.postMessage(msg, location.origin);
   }
@@ -201,7 +201,7 @@
     timers.forEach(clearInterval);
     if (port) { try { port.disconnect(); } catch (e) { /* gone */ } }
     port = null;
-    window.__syncroomLoaded = false;
+    window.__samesecondLoaded = false;
   }
 
   // ---------- on-video notices ----------
@@ -214,7 +214,7 @@
       var style = document.createElement("style");
       style.textContent = ".t{position:fixed;left:50%;bottom:72px;transform:translateX(-50%);max-width:min(480px,90vw);" +
         "background:rgba(12,16,24,.92);color:#e9edf5;font:500 14px/1.4 system-ui,sans-serif;padding:10px 14px;border-radius:8px;" +
-        "border-left:3px solid #4fd1c5;z-index:2147483647;pointer-events:none;box-shadow:0 4px 16px rgba(0,0,0,.4)}";
+        "border-left:3px solid #7ab2fa;z-index:2147483647;pointer-events:none;box-shadow:0 4px 16px rgba(0,0,0,.4)}";
       toastText = document.createElement("div");
       toastText.className = "t";
       shadow.appendChild(style);

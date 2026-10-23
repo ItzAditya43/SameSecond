@@ -1,6 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "syncroom",
+  "name": "samesecond",
   "main": "server/index.js",
   "compatibility_date": "2025-09-01",
   "assets": {

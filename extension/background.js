@@ -1,4 +1,4 @@
-// Syncroom background: holds the connection to the room server, injects the
+// SameSecond background: holds the connection to the room server, injects the
 // sync script into the room's tab, and relays messages between the tab, the
 // panel and the room.
 /* global importScripts */
@@ -8,7 +8,7 @@ const api = globalThis.browser || globalThis.chrome;
 const SC = globalThis.SyncCore;
 
 const S = {
-  settings: { serverUrl: globalThis.SYNCROOM_DEFAULT_SERVER, name: "", clientKey: "" },
+  settings: { serverUrl: globalThis.SAMESECOND_DEFAULT_SERVER, name: "", clientKey: "" },
   roomId: null,
   tabId: null,
   ws: null,
@@ -268,7 +268,7 @@ async function readVideo(tabId) {
 
 async function joinRoom(roomId, existingTabId) {
   const res = await fetch(`${server()}/api/rooms/${roomId}`).catch(() => null);
-  if (!res || !res.ok) throw new Error(`Couldn't reach the Syncroom server at ${server()}. Check the address in Settings.`);
+  if (!res || !res.ok) throw new Error(`Couldn't reach the SameSecond server at ${server()}. Check the address in Settings.`);
   const info = await res.json();
   if (!info.exists) throw new Error("That room has ended or the link is wrong.");
   if (S.roomId) await leaveRoom(false);
@@ -378,8 +378,8 @@ function chooseActive() {
 
 api.runtime.onConnect.addListener(async (port) => {
   await ready;
-  if (port.name === "syncroom-panel") return attachPanel(port);
-  if (port.name !== "syncroom-frame") return;
+  if (port.name === "samesecond-panel") return attachPanel(port);
+  if (port.name !== "samesecond-frame") return;
   const tabId = port.sender && port.sender.tab && port.sender.tab.id;
   const frameId = port.sender.frameId || 0;
   if (tabId == null || tabId !== S.tabId) {
@@ -481,7 +481,7 @@ async function onPanelMessage(msg) {
     case "join": {
       await saveSettings({ name: msg.name });
       const id = parseRoomCode(msg.code);
-      if (!id) throw new Error("That isn't a Syncroom invite link or code.");
+      if (!id) throw new Error("That isn't a SameSecond invite link or code.");
       await joinRoom(id, null);
       break;
     }
@@ -532,7 +532,7 @@ async function saveSettings(patch) {
   await api.storage.local.set({ settings: S.settings });
 }
 
-// ---------- invite pages on the Syncroom site ----------
+// ---------- invite pages on the SameSecond site ----------
 
 api.runtime.onMessage.addListener((msg, sender) => {
   if (!msg || msg.type !== "bridge-join") return;

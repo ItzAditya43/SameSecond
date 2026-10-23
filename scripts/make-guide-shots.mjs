@@ -12,9 +12,10 @@ const OUT = root + "public/guide/";
 const TMP = root + "dist/guide-shots/";
 const LOCAL = "http://127.0.0.1:8795";
 // Friendly addresses for the pictures; Chrome maps them to the local servers.
-const APP = "http://watch.syncroom.party";
+const APP = "http://watch.samesecond.party";
 const MEDIA = "http://www.testflix.tv";
-const YT = "https://www.youtube.com/watch?v=aqz-KE-bpKQ";
+// Big Buck Bunny (Blender Foundation, CC BY 3.0) as a direct video link.
+const VIDEO = "https://archive.org/download/BigBuckBunny_124/Content/big_buck_bunny_720p_surround.mp4";
 const CHROMIUM = process.env.CHROMIUM_PATH || "/usr/bin/chromium";
 const EXT = root + "dist/guide-ext";
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -35,7 +36,7 @@ for (let i = 0; ; i++) {
 }
 
 const UA = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36";
-const flags = ['--host-resolver-rules=MAP watch.syncroom.party:80 127.0.0.1:8795, MAP www.testflix.tv:80 127.0.0.1:8800',
+const flags = ['--host-resolver-rules=MAP watch.samesecond.party:80 127.0.0.1:8795, MAP www.testflix.tv:80 127.0.0.1:8800',
   "--autoplay-policy=no-user-gesture-required", "--no-sandbox", "--mute-audio", "--hide-scrollbars", `--user-agent=${UA}`,
   "--use-fake-ui-for-media-stream", "--use-fake-device-for-media-stream"];
 // Each person gets their own browser (separate profiles ignore the address mapping).
@@ -85,7 +86,7 @@ await highlight(X, () => {
   const tb = document.querySelector("extensions-manager").shadowRoot.querySelector("extensions-toolbar").shadowRoot;
   tb.querySelector("#loadUnpacked").style.outline = "none";
   const list = document.querySelector("extensions-manager").shadowRoot.querySelector("extensions-item-list").shadowRoot;
-  const item = [...list.querySelectorAll("extensions-item")].find((i) => /Syncroom/.test(i.shadowRoot.textContent));
+  const item = [...list.querySelectorAll("extensions-item")].find((i) => /SameSecond/.test(i.shadowRoot.textContent));
   const card = item.shadowRoot.querySelector("#card") || item;
   card.style.outline = "4px solid #f0a25a"; card.style.outlineOffset = "4px";
 });
@@ -115,7 +116,7 @@ await shot(P, "ext-1-start-room");
 await P.evaluate(() => { document.getElementById("start").style.outline = "none"; });
 await P.evaluate(async (url) => {
   const [tab] = await chrome.tabs.query({ url });
-  chrome.runtime.connect({ name: "syncroom-panel" }).postMessage({ type: "start", tabId: tab.id, name: "Aditya" });
+  chrome.runtime.connect({ name: "samesecond-panel" }).postMessage({ type: "start", tabId: tab.id, name: "Aditya" });
 }, MEDIA + "/watch.html");
 await P.waitForFunction(() => document.getElementById("invite").value, { timeout: 8000 });
 const invite = await P.$eval("#invite", (e) => e.value);
@@ -158,7 +159,7 @@ const L = await (await launch(false)).newPage();
 await L.setViewport({ width: 1280, height: 760 });
 await L.goto(APP + "/");
 await L.type("#start-name", "Aditya");
-await L.type("#start-url", YT);
+await L.type("#start-url", VIDEO);
 await L.evaluate(() => {
   const b = document.querySelector("#start-form button[type=submit]");
   b.style.outline = "4px solid #f0a25a"; b.style.outlineOffset = "3px";
@@ -166,30 +167,18 @@ await L.evaluate(() => {
 await shot(L, "web-1-start-room");
 await Promise.all([L.waitForNavigation(), L.click("#start-form button[type=submit]")]);
 const room = L.url();
-await L.waitForFunction(() => document.querySelector(".stage iframe"), { timeout: 20000 });
-// YouTube's time, read from inside its player frame.
-async function ytState(page) {
-  const f = page.frames().find((x) => /youtube(-nocookie)?\.com\/embed/.test(x.url()));
-  return f ? f.evaluate(() => { const v = document.querySelector("video"); return v ? { t: v.currentTime, paused: v.paused } : null; }).catch(() => null) : null;
-}
-for (let i = 0; i < 8; i++) {
-  await sleep(3000);
-  const st = await ytState(L);
-  if (st && !st.paused && st.t > 1) break;
-  const box = await (await L.$(".stage iframe")).boundingBox();
-  await L.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
-}
-// Skip ahead to a nicer scene.
-const fr = L.frames().find((x) => /youtube(-nocookie)?\.com\/embed/.test(x.url()));
-await fr.evaluate(() => { document.querySelector("video").currentTime = 95; });
-await sleep(4000);
+const vstate = (page) => page.evaluate(() => { const v = document.querySelector("video"); return v ? { t: v.currentTime, paused: v.paused, rs: v.readyState } : null; });
+await L.waitForFunction(() => { const v = document.querySelector("video"); return v && v.readyState >= 1; }, { timeout: 60000 });
+// Skip ahead to a nicer scene, then play.
+await L.evaluate(() => { const v = document.querySelector("video"); v.currentTime = 95; v.play(); });
+for (let i = 0; i < 30; i++) { await sleep(1000); const st = await vstate(L); if (st && !st.paused && st.t > 96 && st.rs >= 3) break; }
 const ph = await (await launch(false)).newPage();
 await ph.setViewport({ width: 390, height: 844, isMobile: true, hasTouch: true, deviceScaleFactor: 2 });
 await ph.goto(room);
 await ph.waitForSelector("#gate-name");
 await ph.type("#gate-name", "Sam");
 await ph.click(".stage-card button[type=submit]");
-for (let i = 0; i < 15; i++) { await sleep(2000); const st = await ytState(ph); if (st && !st.paused && st.t > 96) break; }
+for (let i = 0; i < 30; i++) { await sleep(1000); const st = await vstate(ph); if (st && !st.paused && st.t > 97 && st.rs >= 3) break; }
 await sleep(4000);
 await ph.type("#chat-input", "omg the bunny");
 await ph.click("#chat-form button");

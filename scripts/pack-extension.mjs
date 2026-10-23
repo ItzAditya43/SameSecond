@@ -1,7 +1,7 @@
 // Builds the extension for each browser, with a server address baked in.
 // Usage: node scripts/pack-extension.mjs [server-url] [--target chrome|firefox|all]
 //                                        [--out file.zip] [--dir folder]
-// Default: both targets, written to dist/syncroom-chrome.zip and dist/syncroom-firefox.zip.
+// Default: both targets, written to dist/samesecond-chrome.zip and dist/samesecond-firefox.zip.
 // Chrome's build also covers Edge, Brave and Opera.
 import { readFileSync, readdirSync, statSync, mkdirSync, writeFileSync, rmSync } from "node:fs";
 import { dirname, join, relative, sep } from "node:path";
@@ -35,7 +35,7 @@ for (const t of targets) {
     const name = relative(extDir, full).split(sep).join("/");
     let data = readFileSync(name === "sync-core.js" ? join(root, "shared", "sync-core.js") : full);
     if (name === "config.js" && serverUrl) {
-      data = Buffer.from(data.toString("utf8").replace(/SYNCROOM_DEFAULT_SERVER = ".*?"/, `SYNCROOM_DEFAULT_SERVER = "${serverUrl.replace(/\/+$/, "")}"`));
+      data = Buffer.from(data.toString("utf8").replace(/SAMESECOND_DEFAULT_SERVER = ".*?"/, `SAMESECOND_DEFAULT_SERVER = "${serverUrl.replace(/\/+$/, "")}"`));
     }
     if (name === "manifest.json") data = Buffer.from(JSON.stringify(manifestFor(t, JSON.parse(data.toString("utf8"))), null, 2) + "\n");
     return { name, data };
@@ -47,7 +47,7 @@ for (const t of targets) {
     for (const e of entries) { mkdirSync(dirname(join(base, e.name)), { recursive: true }); writeFileSync(join(base, e.name), e.data); }
     console.log(`${relative(root, base) || base}/  (${t}, ${entries.length} files${serverUrl ? `, server ${serverUrl}` : ""})`);
   } else {
-    const out = flag("--out") ? join(root, flag("--out")) : join(root, "dist", `syncroom-${t}.zip`);
+    const out = flag("--out") ? join(root, flag("--out")) : join(root, "dist", `samesecond-${t}.zip`);
     writeZip(out, entries);
     console.log(`${relative(root, out)}  (${t}, ${entries.length} files${serverUrl ? `, server ${serverUrl}` : ""})`);
   }
