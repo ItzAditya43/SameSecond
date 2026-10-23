@@ -25,6 +25,7 @@ jobs:
   browser:
     name: Browser tests (Chrome, Firefox, HTTPS)
     runs-on: ubuntu-latest
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
@@ -32,7 +33,14 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: sudo apt-get update && sudo apt-get install -y ffmpeg
+      - name: Install ffmpeg (makes the test video)
+        timeout-minutes: 10
+        env:
+          DEBIAN_FRONTEND: noninteractive
+          NEEDRESTART_MODE: a
+        run: |
+          sudo -E apt-get update -o Acquire::Retries=3
+          sudo -E apt-get install -y --no-install-recommends -o Dpkg::Options::=--force-confdef -o Dpkg::Options::=--force-confold ffmpeg
       # Chrome for Testing, since plain Chromium builds can't play the H.264 test video.
       - name: Install Chrome
         id: chrome
